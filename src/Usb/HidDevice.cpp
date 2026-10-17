@@ -2,6 +2,7 @@
 
 #include <QMetaObject>
 #include <QtMath>
+#include <chrono>
 
 HidDevice::HidDevice(QObject *parent) : QObject(parent) {
     libusb_init(&m_ctx);
@@ -13,6 +14,8 @@ HidDevice::~HidDevice() {
 }
 
 void HidDevice::fail(const QString &msg) {
+    if (m_error == msg)
+        return;
     m_error = msg;
     emit lastErrorChanged();
 }
@@ -59,6 +62,10 @@ bool HidDevice::open(int vid, int pid) {
         return false;
     }
 
+    if (!m_error.isEmpty()) {   // successful open: no stale error text
+        m_error.clear();
+        emit lastErrorChanged();
+    }
     m_running = true;
     if (m_inEp)
         m_reader = std::thread(&HidDevice::readLoop, this);
@@ -128,6 +135,8 @@ void HidDevice::readLoop() {
         if (rc == 0 && n > 0) {
             QByteArray ba(reinterpret_cast<char *>(buf), n);
             QMetaObject::invokeMethod(this, [this, ba] { emit reportReceived(ba); }, Qt::QueuedConnection);
+        } else if (rc != 0 && rc != LIBUSB_ERROR_TIMEOUT && rc != LIBUSB_ERROR_NO_DEVICE) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));  // avoid busy-spin on errors
         } else if (rc == LIBUSB_ERROR_NO_DEVICE) {
             m_running = false;
             QMetaObject::invokeMethod(
