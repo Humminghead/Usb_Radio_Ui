@@ -28,11 +28,27 @@ SkinBase {
         text: skin.displayFrequency.toFixed(1)
         color: "#f2f2f2"; font.pixelSize: 84; font.weight: Font.Light
     }
-    Text {
-        y: big.y + big.height * 0.92; width: parent.width
-        horizontalAlignment: Text.AlignHCenter
-        text: big.text; font: big.font; color: "#f2f2f2"; opacity: 0.18
-        transform: Scale { yScale: -1; origin.y: height / 2 }
+    // mirror image: the number flipped around its baseline, fading out downwards
+    Item {
+        id: mirror
+        y: big.y + big.baselineOffset          // mirror axis = baseline of the big text
+        width: parent.width; height: 64; clip: true
+
+        Text {
+            y: big.baselineOffset - big.height // flipped copy ends exactly at the axis
+            width: parent.width
+            horizontalAlignment: Text.AlignHCenter
+            text: big.text; font: big.font; color: big.color; opacity: 0.45
+            transform: Scale { yScale: -1; origin.y: big.height / 2 }
+        }
+        // fade: transparent at the baseline -> black at the bottom
+        Rectangle {
+            anchors.fill: parent
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: "#00000000" }
+                GradientStop { position: 0.85; color: "#ff000000" }
+            }
+        }
     }
 
     // --- tuner scale ---
@@ -60,6 +76,26 @@ SkinBase {
                     x: -width / 2; y: -4
                     text: Math.round(parent.f); color: "#b0b0b0"; font.pixelSize: 24
                 }
+            }
+        }
+
+        // side shadows: scale fades into black at both edges
+        Rectangle {
+            anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
+            width: 90
+            gradient: Gradient {
+                orientation: Gradient.Horizontal
+                GradientStop { position: 0.0; color: "#ff000000" }
+                GradientStop { position: 1.0; color: "#00000000" }
+            }
+        }
+        Rectangle {
+            anchors { right: parent.right; top: parent.top; bottom: parent.bottom }
+            width: 90
+            gradient: Gradient {
+                orientation: Gradient.Horizontal
+                GradientStop { position: 0.0; color: "#00000000" }
+                GradientStop { position: 1.0; color: "#ff000000" }
             }
         }
 
