@@ -4,7 +4,7 @@ project(hid_radio LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_AUTOMOC ON)
 
-find_package(Qt6 6.5 REQUIRED COMPONENTS Quick)
+find_package(Qt6 6.5 REQUIRED COMPONENTS Quick Widgets)
 find_package(PkgConfig REQUIRED)
 
 pkg_check_modules(LIBUSB REQUIRED IMPORTED_TARGET libusb-1.0)
@@ -23,6 +23,8 @@ qt_add_qml_module(
   SOURCES
     src/Usb/HidDevice.cpp
     include/Usb/HidDevice.h
+    src/Tray/TrayController.cpp
+    include/Tray/TrayController.h
   QML_FILES
     qml/Main.qml
     qml/skins/SkinBase.qml
@@ -30,4 +32,4 @@ qt_add_qml_module(
     qml/skins/MinimalSkin.qml
   )
 
-target_link_libraries(hid_radio PRIVATE Qt6::Quick PkgConfig::LIBUSB)
+target_link_libraries(hid_radio PRIVATE Qt6::Quick Qt6::Widgets PkgConfig::LIBUSB)
