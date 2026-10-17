@@ -49,6 +49,27 @@ Window {
         function onNextSkinRequested() { root.skinIndex = (root.skinIndex + 1) % root.skins.length }
     }
 
+    // ---- tray: fold / unfold ----
+    function toggleWindow() {
+        if (root.visible && root.visibility !== Window.Minimized) {
+            root.hide()
+        } else {
+            root.showNormal(); root.raise(); root.requestActivate()
+        }
+    }
+    onVisibleChanged: tray.windowVisible = visible
+    // close button folds into the tray (only when a tray exists)
+    onClosing: (close) => {
+        if (tray.available) { close.accepted = false; root.hide() }
+    }
+    Binding { target: tray; property: "connected"; value: hid.connected }
+    Connections {
+        target: tray
+        function onToggleRequested()        { root.toggleWindow() }
+        function onConnectToggleRequested() { hid.connected ? hid.close() : hid.open() }
+        function onQuitRequested()          { Qt.quit() }
+    }
+
     Connections {
         target: hid
         function onReportReceived(data) {

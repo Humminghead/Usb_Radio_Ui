@@ -1,14 +1,19 @@
+#include "Tray/TrayController.h"
 #include "Usb/HidDevice.h"
-#include <QGuiApplication>
+#include <QApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 
 int main(int argc, char *argv[]) {
-    QGuiApplication app(argc, argv);
+    QApplication app(argc, argv);
     HidDevice hid;
+    TrayController tray;
+    // keep running when the window is folded into the tray
+    app.setQuitOnLastWindowClosed(!tray.available());
 
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("hid", &hid);
+    engine.rootContext()->setContextProperty("tray", &tray);
 
     QObject::connect(
         &engine,
