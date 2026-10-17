@@ -37,7 +37,7 @@ SkinBase {
 
     // --- tuner scale ---
     Item {
-        id: scale
+        id: tuner
         y: 190; width: parent.width; height: 120; clip: true
         readonly property real pxPerMHz: 120
 
@@ -47,8 +47,8 @@ SkinBase {
                 readonly property real f: skin.minFreq + index / 10
                 readonly property bool whole: index % 10 === 5     // x.0 MHz
                 readonly property bool half:  index % 5 === 0      // x.5 MHz
-                x: scale.width / 2 + (f - skin.displayFrequency) * scale.pxPerMHz
-                visible: x > -20 && x < scale.width + 20
+                x: tuner.width / 2 + (f - skin.displayFrequency) * tuner.pxPerMHz
+                visible: x > -20 && x < tuner.width + 20
                 Rectangle {
                     y: 70 - height / 2; width: 2
                     height: parent.whole ? 56 : parent.half ? 40 : 28
@@ -64,7 +64,7 @@ SkinBase {
         }
 
         // needle: fixed, never animates
-        Rectangle { x: scale.width / 2 - 1; y: 0; width: 2; height: scale.height; color: skin.accent }
+        Rectangle { x: tuner.width / 2 - 1; y: 0; width: 2; height: tuner.height; color: skin.accent }
 
         MouseArea {
             anchors.fill: parent
@@ -76,7 +76,7 @@ SkinBase {
                 startF = skin.displayFrequency
             }
             onPositionChanged: (m) => {
-                const f = Math.round((startF - (m.x - startX) / scale.pxPerMHz) * 10) / 10
+                const f = Math.round((startF - (m.x - startX) / tuner.pxPerMHz) * 10) / 10
                 const c = Math.max(skin.minFreq, Math.min(skin.maxFreq, f))
                 skin.displayFrequency = c                      // immediate, Behavior disabled
                 if (Math.abs(c - skin.frequency) > 0.01)
