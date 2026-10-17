@@ -1,0 +1,2 @@
+# /etc/udev/rules.d/99-hid-radio.rules  (then: sudo udevadm control --reload && replug)
+SUBSYSTEM=="usb", ATTR{idVendor}=="c0de", ATTR{idProduct}=="cafe", MODE="0666"

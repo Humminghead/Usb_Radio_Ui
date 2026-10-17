@@ -1,0 +1,47 @@
+#pragma once
+#include <QObject>
+#include <QByteArray>
+#include <atomic>
+#include <thread>
+#include <libusb.h>
+
+// USB HID device talking over interrupt endpoints (falls back to SET_REPORT
+// on the control endpoint if the interface has no interrupt OUT endpoint).
+class HidDevice : public QObject {
+    Q_OBJECT
+    Q_PROPERTY(bool connected READ connected NOTIFY connectedChanged)
+    Q_PROPERTY(double frequency READ frequency NOTIFY frequencyChanged)
+    Q_PROPERTY(QString lastError READ lastError NOTIFY lastErrorChanged)
+public:
+    explicit HidDevice(QObject *parent = nullptr);
+    ~HidDevice() override;
+
+    bool connected() const { return m_handle != nullptr; }
+    double frequency() const { return m_frequency; }
+    QString lastError() const { return m_error; }
+
+    Q_INVOKABLE bool open(int vid = 0xc0de, int pid = 0xcafe);
+    Q_INVOKABLE void close();
+    Q_INVOKABLE bool setFrequency(double mhz);        // 87.5 .. 108.0
+    Q_INVOKABLE bool seek(int direction);              // +1 / -1 (0.1 MHz steps)
+
+signals:
+    void connectedChanged();
+    void frequencyChanged();
+    void lastErrorChanged();
+    void reportReceived(const QByteArray &data);       // raw 7-byte input report
+
+private:
+    bool sendReport(const QByteArray &data);
+    void readLoop();
+    void fail(const QString &msg);
+
+    libusb_context *m_ctx = nullptr;
+    libusb_device_handle *m_handle = nullptr;
+    int m_iface = -1;
+    uint8_t m_outEp = 0, m_inEp = 0;
+    std::atomic<bool> m_running{false};
+    std::thread m_reader;
+    double m_frequency = 99.2;
+    QString m_error;
+};
