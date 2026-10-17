@@ -18,8 +18,20 @@ Window {
     Loader {
         id: loader
         anchors.fill: parent
-        source: root.skins[root.skinIndex].source
     }
+
+    // The skin is created with the current state as initial properties, so a freshly
+    // loaded skin starts at the confirmed frequency and never replays an animation.
+    function loadSkin() {
+        loader.setSource(Qt.resolvedUrl(skins[skinIndex].source), {
+            "frequency": hid.frequency,
+            "connected": hid.connected,
+            "playing":   root.playing,
+            "skinName":  skins[skinIndex].name,
+            "status":    hid.lastError
+        })
+    }
+    onSkinIndexChanged: loadSkin()
 
     // Everything a skin gets/sends is defined by SkinBase.qml
     Binding { target: loader.item; property: "frequency"; value: hid.frequency; when: loader.item }
@@ -45,5 +57,9 @@ Window {
         }
     }
 
-    Component.onCompleted: if (hid.open()) hid.setFrequency(99.2)
+    Component.onCompleted: {
+        if (hid.open())
+            hid.setFrequency(99.2)
+        loadSkin()
+    }
 }

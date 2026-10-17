@@ -1,6 +1,10 @@
 import QtQuick
 
 // Contract between the app and every skin.
+//
+// Internal animation state (convention, NOT part of the contract):
+// a skin MAY declare a skin-local `real displayFrequency` that animates toward
+// `frequency`. The shell never reads or writes it.
 Item {
     // state (set by app)
     property real   frequency: 99.2
