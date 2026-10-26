@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 
 SkinBase {
     id: skin
@@ -7,6 +8,7 @@ SkinBase {
     // skin-local animation state (see SkinBase / spec 5.5)
     property real displayFrequency: frequency
     property bool dragging: false
+    property bool powerEnabled: false
 
     Behavior on displayFrequency {
         enabled: !skin.dragging
@@ -16,6 +18,11 @@ SkinBase {
     onFrequencyChanged: {
         if (!skin.dragging)
             skin.displayFrequency = skin.frequency
+    }
+
+    onPowerEnabledChanged: {
+        ///\todo
+        console.log("Power state changed")
     }
 
     Rectangle { anchors.fill: parent; color: "black" }
@@ -139,8 +146,8 @@ SkinBase {
         y: 455; anchors.horizontalCenter: parent.horizontalCenter; spacing: 70
         Text { text: "⏮"; font.pixelSize: 36; color: "#444"
                MouseArea { anchors.fill: parent; anchors.margins: -15; onClicked: skin.stepRequested(-1) } }
-        Text { text: skin.playing ? "▶" : "⏸"; font.pixelSize: 40; color: skin.accent
-               MouseArea { anchors.fill: parent; anchors.margins: -15; onClicked: skin.playToggled() } }
+        Image { source:  skin.powerEnabled ? "icons/power_round_off.png" : "icons/power_round_off.png";
+               MouseArea { anchors.fill: parent; anchors.margins: -15; onClicked: skin.powerUpToggled() } }
         Text { text: "⏭"; font.pixelSize: 36; color: "#444"
                MouseArea { anchors.fill: parent; anchors.margins: -15; onClicked: skin.stepRequested(1) } }
     }

@@ -45,6 +45,7 @@ Window {
         function onTuneRequested(mhz) { hid.setFrequency(mhz) }
         function onStepRequested(dir) { hid.seek(dir) }
         function onPlayToggled()      { root.playing = !root.playing }   // TODO: send mute/play command if your firmware has one
+        function onPowerUpToggled()   { hid.powerUp() }
         function onConnectRequested() { hid.connected ? hid.close() : hid.open() }
         function onNextSkinRequested() { root.skinIndex = (root.skinIndex + 1) % root.skins.length }
     }

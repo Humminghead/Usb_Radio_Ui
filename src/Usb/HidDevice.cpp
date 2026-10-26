@@ -110,7 +110,7 @@ bool Device::setFrequency(double mhz) {
         return false;
     }
 
-    // ?
+    // Check that a given value stays in a given range
     mhz = qBound(87.5, qRound(mhz * 10) / 10.0, 108.0);
 
     // Old format of the output report: ID 2, command 1, uint16 LE freq in 100 kHz units, 4 pad bytes
@@ -129,6 +129,20 @@ bool Device::setFrequency(double mhz) {
 
 bool Device::seek(int dir) {
     return setFrequency(m_frequency + 0.1 * (dir > 0 ? 1 : -1));
+}
+
+bool Device::powerUp(){
+    if (!m_handle) {
+        fail("Not connected");
+        return false;
+    }
+
+    HostCommandReport report{.RawCommnad = CommandId::PowerUp, .SeqId = 0, .Value = quint16(8750)};
+
+    if (!sendReport(QByteArray(reinterpret_cast<char *>(&report), sizeof(HostCommandReport))))
+        return false;
+
+    return true;
 }
 
 void Device::readLoop() {

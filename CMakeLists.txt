@@ -31,6 +31,9 @@ qt_add_qml_module(
     qml/skins/SkinBase.qml
     qml/skins/NokiaSkin.qml
     qml/skins/MinimalSkin.qml
+  RESOURCES
+    qml/skins/icons/power_round_off.png
+    qml/skins/icons/power_round_on.png
   )
 
 target_link_libraries(hid_radio PRIVATE Qt6::Quick Qt6::Widgets PkgConfig::LIBUSB)
