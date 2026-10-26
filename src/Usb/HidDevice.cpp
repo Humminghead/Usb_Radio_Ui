@@ -117,18 +117,13 @@ bool Device::setFrequency(double mhz) {
     HostCommandReport report{.RawCommnad = CommandId::TuneFreq, .SeqId = ++m_SeqId, .Value = quint16(qRound(mhz * 10))};
 
     if (!sendReport(QByteArray(reinterpret_cast<char *>(&report), sizeof(HostCommandReport))))
-        return false;
-
-    if (!qFuzzyCompare(mhz, m_frequency)) {
-        m_frequency = mhz;
-        emit frequencyChanged();
-    }
+        return false;   
 
     return true;
 }
 
 bool Device::seek(int dir) {
-    return setFrequency(m_frequency + 0.1 * (dir > 0 ? 1 : -1));
+    return setFrequency(m_frequencyCache + 0.1 * (dir > 0 ? 1 : -1));
 }
 
 bool Device::powerUp(){
@@ -152,7 +147,24 @@ void Device::readLoop() {
         int rc = libusb_interrupt_transfer(m_handle, m_inEp, buf, 7, &n, 200);
         if (rc == 0 && n > 0) {
             QByteArray ba(reinterpret_cast<char *>(buf), n);
-            QMetaObject::invokeMethod(this, [this, ba] { emit reportReceived(ba); }, Qt::QueuedConnection);
+
+            if(auto id = ba.at(0); HOST_CMD_REPORT_ID == id){
+                ///\todo
+            }else if (DEVICE_STATE_REPORT_ID == id && n==sizeof(DeviceTelemetryReport)){
+                const DeviceTelemetryReport *const telemetry{reinterpret_cast<DeviceTelemetryReport *const>(ba.data())};
+
+                if ((telemetry->StatusByte & 0x80) == 0x80) {
+                    if (auto mhz = static_cast<double>(telemetry->Freq/10.0); !qFuzzyCompare(mhz, m_frequencyCache)) {
+                        m_frequencyCache = mhz;
+                        emit frequencyChanged();
+                    }
+                }
+            }
+            else{
+                ///\todo do nothing. maybe print some error in UI
+                QMetaObject::invokeMethod(this, [this, ba] { emit reportReceived(ba); }, Qt::QueuedConnection);
+            }
+
         } else if (rc != 0 && rc != LIBUSB_ERROR_TIMEOUT && rc != LIBUSB_ERROR_NO_DEVICE) {
             std::this_thread::sleep_for(std::chrono::milliseconds(50)); // avoid busy-spin on errors
         } else if (rc == LIBUSB_ERROR_NO_DEVICE) {
