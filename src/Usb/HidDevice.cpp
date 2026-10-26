@@ -105,20 +105,25 @@ bool Device::sendReport(const QByteArray &data) {
 }
 
 bool Device::setFrequency(double mhz) {
-    mhz = qBound(87.5, qRound(mhz * 10) / 10.0, 108.0);
-    // Output report: ID 2, command 1, uint16 LE freq in 100 kHz units, 4 pad bytes
-    const quint16 f = quint16(qRound(mhz * 10));
-    QByteArray r(8, 0);
-    r[0] = 0x02;
-    r[1] = 0x01;
-    r[2] = char(f & 0xff);
-    r[3] = char(f >> 8);
-    if (!sendReport(r))
+    if (!m_handle) {
+        fail("Not connected");
         return false;
+    }
+
+    // ?
+    mhz = qBound(87.5, qRound(mhz * 10) / 10.0, 108.0);
+
+    // Old format of the output report: ID 2, command 1, uint16 LE freq in 100 kHz units, 4 pad bytes
+    HostCommandReport report{.RawCommnad = CommandId::TuneFreq, .SeqId = 0, .Value = quint16(qRound(mhz * 10))};
+
+    if (!sendReport(QByteArray(reinterpret_cast<char *>(&report), sizeof(HostCommandReport))))
+        return false;
+
     if (!qFuzzyCompare(mhz, m_frequency)) {
         m_frequency = mhz;
         emit frequencyChanged();
     }
+
     return true;
 }
 
