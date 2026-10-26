@@ -19,6 +19,7 @@ Item {
     signal tuneRequested(real mhz)
     signal stepRequested(int dir)
     signal playToggled()
+    signal powerUpToggled()
     signal connectRequested()
     signal nextSkinRequested()
 
