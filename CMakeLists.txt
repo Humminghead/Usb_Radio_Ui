@@ -23,6 +23,7 @@ qt_add_qml_module(
   SOURCES
     src/Usb/HidDevice.cpp
     include/Usb/HidDevice.h
+    include/Usb/Report.h
     src/Tray/TrayController.cpp
     include/Tray/TrayController.h
   QML_FILES

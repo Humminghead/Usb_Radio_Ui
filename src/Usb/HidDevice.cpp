@@ -1,29 +1,28 @@
 #include "Usb/HidDevice.h"
+#include "Usb/Report.h"
 
 #include <QMetaObject>
 #include <QtMath>
 #include <chrono>
-
-HidDevice::HidDevice(QObject *parent) : QObject(parent) {
+namespace Usb::Hid {
+Device::Device(int vid, int pid, QObject *parent) : QObject(parent), m_Vid{vid}, m_Pid{pid} {
     libusb_init(&m_ctx);
 }
-HidDevice::~HidDevice() {
+Device::~Device() {
     close();
     if (m_ctx)
         libusb_exit(m_ctx);
 }
 
-void HidDevice::fail(const QString &msg) {
+void Device::fail(const QString &msg) {
     if (m_error == msg)
         return;
     m_error = msg;
     emit lastErrorChanged();
 }
 
-bool HidDevice::open(int vid, int pid) {
-    if (m_handle)
-        return true;
-    m_handle = libusb_open_device_with_vid_pid(m_ctx, vid, pid);
+bool Device::open() {
+    m_handle = libusb_open_device_with_vid_pid(m_ctx, m_Vid, m_Pid);
     if (!m_handle) {
         fail("Device not found");
         return false;
@@ -62,18 +61,18 @@ bool HidDevice::open(int vid, int pid) {
         return false;
     }
 
-    if (!m_error.isEmpty()) {   // successful open: no stale error text
+    if (!m_error.isEmpty()) { // successful open: no stale error text
         m_error.clear();
         emit lastErrorChanged();
     }
     m_running = true;
     if (m_inEp)
-        m_reader = std::thread(&HidDevice::readLoop, this);
+        m_reader = std::thread(&Device::readLoop, this);
     emit connectedChanged();
     return true;
 }
 
-void HidDevice::close() {
+void Device::close() {
     m_running = false;
     if (m_reader.joinable())
         m_reader.join();
@@ -85,7 +84,7 @@ void HidDevice::close() {
     }
 }
 
-bool HidDevice::sendReport(const QByteArray &data) {
+bool Device::sendReport(const QByteArray &data) {
     if (!m_handle) {
         fail("Not connected");
         return false;
@@ -105,29 +104,34 @@ bool HidDevice::sendReport(const QByteArray &data) {
     return true;
 }
 
-bool HidDevice::setFrequency(double mhz) {
-    mhz = qBound(87.5, qRound(mhz * 10) / 10.0, 108.0);
-    // Output report: ID 2, command 1, uint16 LE freq in 100 kHz units, 4 pad bytes
-    const quint16 f = quint16(qRound(mhz * 10));
-    QByteArray r(8, 0);
-    r[0] = 0x02;
-    r[1] = 0x01;
-    r[2] = char(f & 0xff);
-    r[3] = char(f >> 8);
-    if (!sendReport(r))
+bool Device::setFrequency(double mhz) {
+    if (!m_handle) {
+        fail("Not connected");
         return false;
+    }
+
+    // ?
+    mhz = qBound(87.5, qRound(mhz * 10) / 10.0, 108.0);
+
+    // Old format of the output report: ID 2, command 1, uint16 LE freq in 100 kHz units, 4 pad bytes
+    HostCommandReport report{.RawCommnad = CommandId::TuneFreq, .SeqId = 0, .Value = quint16(qRound(mhz * 10))};
+
+    if (!sendReport(QByteArray(reinterpret_cast<char *>(&report), sizeof(HostCommandReport))))
+        return false;
+
     if (!qFuzzyCompare(mhz, m_frequency)) {
         m_frequency = mhz;
         emit frequencyChanged();
     }
+
     return true;
 }
 
-bool HidDevice::seek(int dir) {
+bool Device::seek(int dir) {
     return setFrequency(m_frequency + 0.1 * (dir > 0 ? 1 : -1));
 }
 
-void HidDevice::readLoop() {
+void Device::readLoop() {
     uint8_t buf[64];
     while (m_running) {
         int n = 0;
@@ -136,7 +140,7 @@ void HidDevice::readLoop() {
             QByteArray ba(reinterpret_cast<char *>(buf), n);
             QMetaObject::invokeMethod(this, [this, ba] { emit reportReceived(ba); }, Qt::QueuedConnection);
         } else if (rc != 0 && rc != LIBUSB_ERROR_TIMEOUT && rc != LIBUSB_ERROR_NO_DEVICE) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(50));  // avoid busy-spin on errors
+            std::this_thread::sleep_for(std::chrono::milliseconds(50)); // avoid busy-spin on errors
         } else if (rc == LIBUSB_ERROR_NO_DEVICE) {
             m_running = false;
             QMetaObject::invokeMethod(
@@ -149,3 +153,4 @@ void HidDevice::readLoop() {
         }
     }
 }
+} // namespace Usb::Hid
