@@ -79,9 +79,7 @@ Window {
         }
     }
 
-    Component.onCompleted: {
-        if (hid.open())
-            hid.setFrequency(99.2)
+    Component.onCompleted: {        
         loadSkin()
     }
 }
