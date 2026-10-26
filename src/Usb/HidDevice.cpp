@@ -114,7 +114,7 @@ bool Device::setFrequency(double mhz) {
     mhz = qBound(87.5, qRound(mhz * 10) / 10.0, 108.0);
 
     // Old format of the output report: ID 2, command 1, uint16 LE freq in 100 kHz units, 4 pad bytes
-    HostCommandReport report{.RawCommnad = CommandId::TuneFreq, .SeqId = 0, .Value = quint16(qRound(mhz * 10))};
+    HostCommandReport report{.RawCommnad = CommandId::TuneFreq, .SeqId = ++m_SeqId, .Value = quint16(qRound(mhz * 10))};
 
     if (!sendReport(QByteArray(reinterpret_cast<char *>(&report), sizeof(HostCommandReport))))
         return false;
@@ -137,7 +137,7 @@ bool Device::powerUp(){
         return false;
     }
 
-    HostCommandReport report{.RawCommnad = CommandId::PowerUp, .SeqId = 0, .Value = quint16(8750)};
+    HostCommandReport report{.RawCommnad = CommandId::PowerUp, .SeqId =++m_SeqId, .Value = quint16(8750)};
 
     if (!sendReport(QByteArray(reinterpret_cast<char *>(&report), sizeof(HostCommandReport))))
         return false;

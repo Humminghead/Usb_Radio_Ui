@@ -55,5 +55,6 @@ class Device : public QObject {
     double m_frequency = 90.1;
     QString m_error;
     bool m_hwIsPowered{false};
+    uint8_t m_SeqId{0};
 };
 } // namespace Usb::Hid
