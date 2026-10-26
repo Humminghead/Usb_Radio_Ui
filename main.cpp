@@ -7,7 +7,8 @@
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
     Usb::Hid::Device hid(0xc0de,0xcafe);
-    TrayController tray;
+    TrayController tray;    
+
     // keep running when the window is folded into the tray
     app.setQuitOnLastWindowClosed(!tray.available());
 
