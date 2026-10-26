@@ -22,7 +22,7 @@ class Device : public QObject {
     ~Device() override;
 
     bool connected() const { return m_handle != nullptr; }
-    double frequency() const { return m_frequency; }
+    double frequency() const { return m_frequencyCache; }
     QString lastError() const { return m_error; }
     bool powered() const { return m_hwIsPowered;}
 
@@ -52,7 +52,7 @@ class Device : public QObject {
     uint8_t m_outEp = 0, m_inEp = 0;
     std::atomic<bool> m_running{false};
     std::thread m_reader;
-    double m_frequency = 90.1;
+    double m_frequencyCache{0};
     QString m_error;
     bool m_hwIsPowered{false};
     uint8_t m_SeqId{0};
