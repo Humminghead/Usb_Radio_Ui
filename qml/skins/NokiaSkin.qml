@@ -220,22 +220,56 @@ SkinBase {
             border.color: Qt.rgba(1, 1, 1, 0.25) // Subtle light top/edge
         }
 
-        // Sharp overlay text (Placed LAST so it sits on top of the blur)
-        Text {
-            id: glassText
+        // Container for the text and its animated effects
+        Item {
+            id: textContainer
             anchors.centerIn: parent
-            text: "Connect the device"
-            // Typography styling for high contrast and readability
-            font.pixelSize: 22
-            font.weight: Font.DemiBold
-            color: "#ffffff"
-            // Optional text shadow to maximize legibility on busy backgrounds
-            layer.enabled: true
-            layer.effect: MultiEffect {
-                shadowEnabled: true
-                shadowColor: Qt.rgba(0, 0, 0, 0.4)
-                shadowBlur: 0.3
-                shadowVerticalOffset: 1
+            width: baseText.width
+            height: baseText.height
+            opacity: 0.0 // Hidden initially
+
+            // Clean QML alternative to a Timer: Sequential sequence for Entrance
+            SequentialAnimation {
+                running: true // Starts immediately when component loads
+
+                // Step A: Pause for second before doing anything
+                PauseAnimation {
+                    duration: 1000
+                }
+
+                // Step B: Smoothly transition opacity from 0.0 to 1.0 over 2 seconds
+                NumberAnimation {
+                    target: textContainer
+                    property: "opacity"
+                    from: 0.0
+                    to: 1.0
+                    duration: 2000
+                    easing.type: Easing.OutQuad
+                }
+
+                // Step C: Seamlessly trigger the continuous idle breathing scale loop
+                PropertyAction {
+                    target: breathingAnimation
+                    property: "running"
+                    value: true
+                }
+            }
+
+            // Base Sharp Text
+            Text {
+                id: baseText
+                text: "Smooth Glass Layer"
+                font.pixelSize: 26
+                font.weight: Font.DemiBold
+                color: "#e0e0e0"
+
+                layer.enabled: true
+                layer.effect: MultiEffect {
+                    shadowEnabled: true
+                    shadowColor: Qt.rgba(0, 0, 0, 0.5)
+                    shadowBlur: 0.3
+                    shadowVerticalOffset: 2
+                }
             }
         }
 
