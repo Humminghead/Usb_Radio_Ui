@@ -148,6 +148,7 @@ SkinBase {
         Image { source: "icons/arrow_btn_l.png"; width: 54; height: 54;
                MouseArea { anchors.fill: parent; anchors.margins: -15; onClicked: skin.stepRequested(-1) } }
         Image { source:  skin.powerEnabled ? "icons/power_round_on.png" : "icons/power_round_off.png";
+                width: 72; height: 72;
                MouseArea { anchors.fill: parent; anchors.margins: -15; onClicked: skin.powerUpToggled() } }
         Image { source: "icons/arrow_btn_r.png"; width: 54; height: 54;
                MouseArea { anchors.fill: parent; anchors.margins: -15; onClicked: skin.stepRequested(1) } }
