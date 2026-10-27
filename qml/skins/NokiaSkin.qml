@@ -238,5 +238,84 @@ SkinBase {
                 shadowVerticalOffset: 1
             }
         }
+
+        // Pure QML Text Masking Overlay (No external shader files required)
+        Item {
+            anchors.fill: parent
+            layer.enabled: true
+            // This ensures the animation only draws inside the text boundaries
+            layer.effect: MultiEffect {
+                maskEnabled: true
+                maskSource: ShaderEffectSource {
+                    sourceItem: baseText
+                }
+            }
+
+            // The Shimmer Gleam Strip
+            Rectangle {
+                id: shimmerGleam
+                width: 80
+                height: glassText.height * 2
+                y: -glassText.height * 0.5
+                rotation: 20
+
+                gradient: Gradient {
+                    GradientStop {
+                        position: 0.0
+                        color: "transparent"
+                    }
+                    GradientStop {
+                        position: 0.5
+                        color: Qt.rgba(1, 1, 1, 0.7)
+                    }
+                    GradientStop {
+                        position: 1.0
+                        color: "transparent"
+                    }
+                }
+
+                // Corrected, sequential sweep loop animation
+                SequentialAnimation {
+                    running: true
+                    loops: Animation.Infinite
+
+                    NumberAnimation {
+                        target: shimmerGleam
+                        property: "x"
+                        from: -120
+                        to: glassText.width + 120
+                        duration: 2000
+                        easing.type: Easing.InOutQuad
+                    }
+
+                    PauseAnimation {
+                        duration: 1500
+                    }
+                }
+            }
+        }
+    }
+
+    // Idle breathing/scale animation for the whole text layout
+    SequentialAnimation {
+        running: true
+        loops: Animation.Infinite
+
+        PropertyAnimation {
+            target: glassText
+            property: "scale"
+            from: 1.0
+            to: 1.04
+            duration: 2500
+            easing.type: Easing.InOutQuad
+        }
+        PropertyAnimation {
+            target: glassText
+            property: "scale"
+            from: 1.04
+            to: 1.0
+            duration: 2500
+            easing.type: Easing.InOutQuad
+        }
     }
 }
