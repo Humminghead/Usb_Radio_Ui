@@ -25,8 +25,6 @@ SkinBase {
         ///\todo
         console.log("Power state changed")
     }
-// Item{
-//     id: rootBackground;
 
     Rectangle { anchors.fill: parent; color: "black" }
 
@@ -224,8 +222,8 @@ SkinBase {
         Item {
             id: textContainer
             anchors.centerIn: parent
-            width: baseText.width
-            height: baseText.height
+            width: glassText.width
+            height: glassText.height
             opacity: 0.0 // Hidden initially
 
             // Clean QML alternative to a Timer: Sequential sequence for Entrance
@@ -257,8 +255,9 @@ SkinBase {
 
             // Base Sharp Text
             Text {
-                id: baseText
-                text: "Smooth Glass Layer"
+                id: glassText
+                anchors.centerIn: parent.Center
+                text: "Connect the device"
                 font.pixelSize: 26
                 font.weight: Font.DemiBold
                 color: "#e0e0e0"
@@ -281,7 +280,7 @@ SkinBase {
             layer.effect: MultiEffect {
                 maskEnabled: true
                 maskSource: ShaderEffectSource {
-                    sourceItem: baseText
+                    sourceItem: glassText
                 }
             }
 
@@ -332,6 +331,7 @@ SkinBase {
 
     // Idle breathing/scale animation for the whole text layout
     SequentialAnimation {
+        id: breathingAnimation
         running: true
         loops: Animation.Infinite
 
