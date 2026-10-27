@@ -20,7 +20,13 @@ Window {
         Timer {
             id: timer
             interval: 500; running: false; repeat: true
-            onTriggered: { active = hid.open(); active ? timer.running = false: timer.running = true; }
+            onTriggered: {
+                if(!active){
+                    active = hid.open();
+                }
+
+                timer.running = !active;
+            }
         }
 
         Text { id: time }
