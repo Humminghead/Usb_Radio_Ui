@@ -34,6 +34,8 @@ qt_add_qml_module(
   RESOURCES
     qml/skins/icons/power_round_off.png
     qml/skins/icons/power_round_on.png
+    qml/skins/icons/arrow_btn_l.png
+    qml/skins/icons/arrow_btn_r.png
   )
 
 target_link_libraries(hid_radio PRIVATE Qt6::Quick Qt6::Widgets PkgConfig::LIBUSB)

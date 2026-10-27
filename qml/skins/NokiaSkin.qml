@@ -142,13 +142,13 @@ SkinBase {
     }
 
     // --- transport ---
-    Row {
+    Row {        
         y: 455; anchors.horizontalCenter: parent.horizontalCenter; spacing: 70
-        Text { text: "⏮"; font.pixelSize: 36; color: "#444"
+        Image { source: "icons/arrow_btn_l.png"; width: 54; height: 54;
                MouseArea { anchors.fill: parent; anchors.margins: -15; onClicked: skin.stepRequested(-1) } }
-        Image { source:  skin.powerEnabled ? "icons/power_round_off.png" : "icons/power_round_off.png";
+        Image { source:  skin.powerEnabled ? "icons/power_round_on.png" : "icons/power_round_off.png";
                MouseArea { anchors.fill: parent; anchors.margins: -15; onClicked: skin.powerUpToggled() } }
-        Text { text: "⏭"; font.pixelSize: 36; color: "#444"
+        Image { source: "icons/arrow_btn_r.png"; width: 54; height: 54;
                MouseArea { anchors.fill: parent; anchors.margins: -15; onClicked: skin.stepRequested(1) } }
     }
 
