@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Effects
 
 SkinBase {
     id: skin
@@ -24,6 +25,8 @@ SkinBase {
         ///\todo
         console.log("Power state changed")
     }
+// Item{
+//     id: rootBackground;
 
     Rectangle { anchors.fill: parent; color: "black" }
 
@@ -142,7 +145,7 @@ SkinBase {
     }
 
     // --- transport ---
-    Row {        
+    Row {
         y: 455; anchors.horizontalCenter: parent.horizontalCenter; spacing: 70
         Image { source: "icons/arrow_btn_l.png"; width: 54; height: 54;
                MouseArea { anchors.fill: parent; anchors.margins: -15; onClicked: skin.stepRequested(-1) } }
@@ -173,6 +176,66 @@ SkinBase {
                             else if (modelData.act === "connect") skin.connectRequested()
                         } }
                 }
+            }
+        }
+    }
+
+    // Transparent, smooth glass layer (Glassmorphism / Frosted Glass)
+    Item {
+        id: glassRoot
+        width: parent.width
+        height: parent.height
+        visible: !skin.connected
+
+        // Capture the background content beneath this panel
+        ShaderEffectSource {
+            id: backgroundSource
+            sourceItem: skin//rootBackground // Reference to your underlying visual content/item
+            sourceRect: Qt.rect(glassRoot.x, glassRoot.y, glassRoot.width, glassRoot.height)
+            anchors.fill: parent
+        }
+
+        // Apply background blur and glass styling
+        MultiEffect {
+            id: glassEffect
+            source: backgroundSource
+            anchors.fill: parent
+            blurEnabled: true
+            blur: 1.0
+            blurMax: 32
+
+            // Optional tint to simulate glass color / frost
+            colorization: 0.1
+            colorizationColor: "#20ffffff"
+        }
+
+        // Optional specular/glossy border and inner highlight
+        Rectangle {
+            id: glassBorder
+            visible: false
+            anchors.fill: parent
+            color: "transparent"
+            radius: 16
+            border.width: 1
+            border.color: Qt.rgba(1, 1, 1, 0.25) // Subtle light top/edge
+        }
+
+        // Sharp overlay text (Placed LAST so it sits on top of the blur)
+        Text {
+            id: glassText
+            anchors.centerIn: parent
+            text: "Connect the device"
+            // Typography styling for high contrast and readability
+            font.pixelSize: 22
+            font.weight: Font.DemiBold
+            color: "#ffffff"
+            // Optional text shadow to maximize legibility on busy backgrounds
+            layer.enabled: true
+            layer.effect: MultiEffect {
+                shadowEnabled: true
+                shadowColor: Qt.rgba(0, 0, 0, 0.4)
+                shadowBlur: 0.3
+                shadowVerticalOffset: 1
             }
         }
     }
