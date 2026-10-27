@@ -14,6 +14,17 @@ Window {
     ]
     property int skinIndex: 0
     property bool playing: true
+    property bool active: false
+
+    Item {
+        Timer {
+            id: timer
+            interval: 500; running: false; repeat: true
+            onTriggered: { active = hid.open(); active ? timer.running = false: timer.running = true; }
+        }
+
+        Text { id: time }
+    }
 
     Loader {
         id: loader
@@ -79,9 +90,8 @@ Window {
         }
     }
 
-    Component.onCompleted: {
-        if (hid.open())
-            hid.setFrequency(99.2)
+    Component.onCompleted: {        
         loadSkin()
+        timer.running = true;
     }
 }

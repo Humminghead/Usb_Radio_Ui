@@ -150,7 +150,7 @@ void Device::readLoop() {
 
             if(auto id = ba.at(0); HOST_CMD_REPORT_ID == id){
                 ///\todo
-            }else if (DEVICE_STATE_REPORT_ID == id && n==sizeof(DeviceTelemetryReport)){
+            }else if (DEVICE_TELEMETRY_REPORT_ID == id && n==sizeof(DeviceTelemetryReport)){
                 const DeviceTelemetryReport *const telemetry{reinterpret_cast<DeviceTelemetryReport *const>(ba.data())};
 
                 if ((telemetry->StatusByte & 0x80) == 0x80) {

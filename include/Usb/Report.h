@@ -5,7 +5,7 @@
 namespace Usb::Hid {
 
 const uint8_t HOST_CMD_REPORT_ID{2};
-const uint8_t DEVICE_STATE_REPORT_ID{1};
+const uint8_t DEVICE_TELEMETRY_REPORT_ID{1};
 
 enum class CommandId : uint8_t {
     Ping = 0x00,
@@ -30,7 +30,7 @@ struct HostCommandReport {
 };
 
 struct DeviceTelemetryReport {
-    uint8_t ReportId{DEVICE_STATE_REPORT_ID};
+    uint8_t ReportId{DEVICE_TELEMETRY_REPORT_ID};
     uint8_t SeqId{0};
     uint8_t StatusByte{0};
     uint16_t Freq{0};

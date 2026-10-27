@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Effects
 
 SkinBase {
     id: skin
@@ -144,11 +145,11 @@ SkinBase {
     // --- transport ---
     Row {
         y: 455; anchors.horizontalCenter: parent.horizontalCenter; spacing: 70
-        Text { text: "⏮"; font.pixelSize: 36; color: "#444"
+        Image { source: "icons/arrow_btn_l.png"; width: 54; height: 54;
                MouseArea { anchors.fill: parent; anchors.margins: -15; onClicked: skin.stepRequested(-1) } }
-        Image { source:  skin.powerEnabled ? "icons/power_round_off.png" : "icons/power_round_off.png";
+        Image { source:  skin.powerEnabled ? "icons/power_round_on.png" : "icons/power_round_off.png";
                MouseArea { anchors.fill: parent; anchors.margins: -15; onClicked: skin.powerUpToggled() } }
-        Text { text: "⏭"; font.pixelSize: 36; color: "#444"
+        Image { source: "icons/arrow_btn_r.png"; width: 54; height: 54;
                MouseArea { anchors.fill: parent; anchors.margins: -15; onClicked: skin.stepRequested(1) } }
     }
 
@@ -174,6 +175,181 @@ SkinBase {
                         } }
                 }
             }
+        }
+    }
+
+    // Transparent, smooth glass layer (Glassmorphism / Frosted Glass)
+    Item {
+        id: glassRoot
+        width: parent.width
+        height: parent.height
+        visible: !skin.connected
+
+        // Capture the background content beneath this panel
+        ShaderEffectSource {
+            id: backgroundSource
+            sourceItem: skin//rootBackground // Reference to your underlying visual content/item
+            sourceRect: Qt.rect(glassRoot.x, glassRoot.y, glassRoot.width, glassRoot.height)
+            anchors.fill: parent
+        }
+
+        // Apply background blur and glass styling
+        MultiEffect {
+            id: glassEffect
+            source: backgroundSource
+            anchors.fill: parent
+            blurEnabled: true
+            blur: 1.0
+            blurMax: 32
+
+            // Optional tint to simulate glass color / frost
+            colorization: 0.1
+            colorizationColor: "#20ffffff"
+        }
+
+        // Optional specular/glossy border and inner highlight
+        Rectangle {
+            id: glassBorder
+            visible: false
+            anchors.fill: parent
+            color: "transparent"
+            radius: 16
+            border.width: 1
+            border.color: Qt.rgba(1, 1, 1, 0.25) // Subtle light top/edge
+        }
+
+        // Container for the text and its animated effects
+        Item {
+            id: textContainer
+            anchors.centerIn: parent
+            width: glassText.width
+            height: glassText.height
+            opacity: 0.0 // Hidden initially
+
+            // Clean QML alternative to a Timer: Sequential sequence for Entrance
+            SequentialAnimation {
+                running: true // Starts immediately when component loads
+
+                // Step A: Pause for second before doing anything
+                PauseAnimation {
+                    duration: 1000
+                }
+
+                // Step B: Smoothly transition opacity from 0.0 to 1.0 over 2 seconds
+                NumberAnimation {
+                    target: textContainer
+                    property: "opacity"
+                    from: 0.0
+                    to: 1.0
+                    duration: 2000
+                    easing.type: Easing.OutQuad
+                }
+
+                // Step C: Seamlessly trigger the continuous idle breathing scale loop
+                PropertyAction {
+                    target: breathingAnimation
+                    property: "running"
+                    value: true
+                }
+            }
+
+            // Base Sharp Text
+            Text {
+                id: glassText
+                anchors.centerIn: parent.Center
+                text: "Connect the device"
+                font.pixelSize: 26
+                font.weight: Font.DemiBold
+                color: "#e0e0e0"
+
+                layer.enabled: true
+                layer.effect: MultiEffect {
+                    shadowEnabled: true
+                    shadowColor: Qt.rgba(0, 0, 0, 0.5)
+                    shadowBlur: 0.3
+                    shadowVerticalOffset: 2
+                }
+            }
+        }
+
+        // Pure QML Text Masking Overlay (No external shader files required)
+        Item {
+            anchors.fill: parent
+            layer.enabled: true
+            // This ensures the animation only draws inside the text boundaries
+            layer.effect: MultiEffect {
+                maskEnabled: true
+                maskSource: ShaderEffectSource {
+                    sourceItem: glassText
+                }
+            }
+
+            // The Shimmer Gleam Strip
+            Rectangle {
+                id: shimmerGleam
+                width: 80
+                height: glassText.height * 2
+                y: -glassText.height * 0.5
+                rotation: 20
+
+                gradient: Gradient {
+                    GradientStop {
+                        position: 0.0
+                        color: "transparent"
+                    }
+                    GradientStop {
+                        position: 0.5
+                        color: Qt.rgba(1, 1, 1, 0.7)
+                    }
+                    GradientStop {
+                        position: 1.0
+                        color: "transparent"
+                    }
+                }
+
+                // Corrected, sequential sweep loop animation
+                SequentialAnimation {
+                    running: true
+                    loops: Animation.Infinite
+
+                    NumberAnimation {
+                        target: shimmerGleam
+                        property: "x"
+                        from: -120
+                        to: glassText.width + 120
+                        duration: 2000
+                        easing.type: Easing.InOutQuad
+                    }
+
+                    PauseAnimation {
+                        duration: 1500
+                    }
+                }
+            }
+        }
+    }
+
+    // Idle breathing/scale animation for the whole text layout
+    SequentialAnimation {
+        id: breathingAnimation
+        running: true
+        loops: Animation.Infinite
+
+        PropertyAnimation {
+            target: glassText
+            property: "scale"
+            from: 1.0
+            to: 1.04
+            duration: 2500
+            easing.type: Easing.InOutQuad
+        }
+        PropertyAnimation {
+            target: glassText
+            property: "scale"
+            from: 1.04
+            to: 1.0
+            duration: 2500
+            easing.type: Easing.InOutQuad
         }
     }
 }
