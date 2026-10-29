@@ -41,7 +41,7 @@ class Device : public QObject {
 
   private:
     bool sendReport(const QByteArray &data);
-    void readLoop();
+    void ReportHanlerLoop();
     void fail(const QString &msg);
 
     int m_Vid{-1};

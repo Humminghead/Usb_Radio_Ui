@@ -67,7 +67,7 @@ bool Device::open() {
     }
     m_running = true;
     if (m_inEp)
-        m_reader = std::thread(&Device::readLoop, this);
+        m_reader = std::thread(&Device::ReportHanlerLoop, this);
     emit connectedChanged();
     return true;
 }
@@ -140,7 +140,7 @@ bool Device::powerUp(){
     return true;
 }
 
-void Device::readLoop() {
+void Device::ReportHanlerLoop() {
     uint8_t buf[64];
     while (m_running) {
         int n = 0;
