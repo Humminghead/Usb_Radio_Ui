@@ -14,18 +14,19 @@ Window {
     ]
     property int skinIndex: 0
     property bool playing: true
-    property bool active: false
+    property bool hidOpen: false
+    property bool uiActive: false
 
     Item {
         Timer {
             id: timer
             interval: 500; running: false; repeat: true
             onTriggered: {
-                if(!active){
-                    active = hid.open();
+                if(!hidOpen){
+                    hidOpen = hid.open();
                 }
 
-                timer.running = !active;
+                timer.running = !hidOpen;
             }
         }
 
@@ -45,7 +46,8 @@ Window {
             "connected": hid.connected,
             "playing":   root.playing,
             "skinName":  skins[skinIndex].name,
-            "status":    hid.lastError
+            "status":    hid.lastError,
+            "uiActive":  root.uiActive
         })
     }
     onSkinIndexChanged: loadSkin()
