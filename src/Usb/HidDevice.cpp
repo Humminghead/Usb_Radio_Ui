@@ -9,14 +9,18 @@
 
 namespace Usb::Hid {
 
+struct Usb{
+    libusb_context *context{nullptr};
+    libusb_device_handle *handle{nullptr};
+    int iface{-1};
+    int vid{-1};
+    int pid{-1};
+    uint8_t outEp{0};
+    uint8_t inEp{0};
+};
+
 struct Device::DataImpl{
-    int m_Vid{-1};
-    int m_Pid{-1};
-    libusb_context *m_ctx = nullptr;
-    libusb_device_handle *m_handle = nullptr;
-    int m_iface = -1;
-    uint8_t m_outEp = 0;
-    uint8_t m_inEp = 0;
+    Usb usb{};
     std::atomic<bool> m_running{false};
     std::thread m_reader;
     double m_frequencyCache{0};
@@ -28,18 +32,18 @@ struct Device::DataImpl{
 Device::Device(int vid, int pid, QObject *parent) : QObject(parent)
     , m_Data{new Device::DataImpl, [](auto * p){ delete p; }}
 {
-    m_Data->m_Vid = vid;
-    m_Data->m_Pid = pid;
-    libusb_init(&m_Data->m_ctx);
+    m_Data->usb.vid = vid;
+    m_Data->usb.pid = pid;
+    libusb_init(&m_Data->usb.context);
 }
 
 Device::~Device() {
     close();
-    if (m_Data->m_ctx)
-        libusb_exit(m_Data->m_ctx);
+    if (m_Data->usb.context)
+        libusb_exit(m_Data->usb.context);
 }
 
-bool Device::connected() const { return m_Data->m_handle != nullptr; }
+bool Device::connected() const { return m_Data->usb.handle != nullptr; }
 
 double Device::frequency() const { return m_Data->m_frequencyCache; }
 
@@ -55,40 +59,40 @@ void Device::fail(const QString &msg) {
 }
 
 bool Device::open() {
-    m_Data->m_handle = libusb_open_device_with_vid_pid(m_Data->m_ctx, m_Data->m_Vid, m_Data->m_Pid);
-    if (!m_Data->m_handle) {
+    m_Data->usb.handle = libusb_open_device_with_vid_pid(m_Data->usb.context, m_Data->usb.vid, m_Data->usb.pid);
+    if (!m_Data->usb.handle) {
         fail("Device not found");
         return false;
     }
 
     // Locate HID interface (class 0x03) and its interrupt endpoints
     libusb_config_descriptor *cfg = nullptr;
-    libusb_get_active_config_descriptor(libusb_get_device(m_Data->m_handle), &cfg);
-    m_Data->m_iface = -1;
-    m_Data->m_outEp = m_Data->m_inEp = 0;
+    libusb_get_active_config_descriptor(libusb_get_device(m_Data->usb.handle), &cfg);
+    m_Data->usb.iface = -1;
+    m_Data->usb.outEp = m_Data->usb.inEp = 0;
     if (cfg) {
-        for (int i = 0; i < cfg->bNumInterfaces && m_Data->m_iface < 0; ++i) {
+        for (int i = 0; i < cfg->bNumInterfaces && m_Data->usb.iface < 0; ++i) {
             const libusb_interface_descriptor &d = cfg->interface[i].altsetting[0];
             if (d.bInterfaceClass != LIBUSB_CLASS_HID)
                 continue;
-            m_Data->m_iface = d.bInterfaceNumber;
+            m_Data->usb.iface = d.bInterfaceNumber;
             for (int e = 0; e < d.bNumEndpoints; ++e) {
                 const auto &ep = d.endpoint[e];
                 if ((ep.bmAttributes & 3) != LIBUSB_TRANSFER_TYPE_INTERRUPT)
                     continue;
-                (ep.bEndpointAddress & LIBUSB_ENDPOINT_IN ? m_Data->m_inEp : m_Data->m_outEp) = ep.bEndpointAddress;
+                (ep.bEndpointAddress & LIBUSB_ENDPOINT_IN ? m_Data->usb.inEp : m_Data->usb.outEp) = ep.bEndpointAddress;
             }
         }
         libusb_free_config_descriptor(cfg);
     }
-    if (m_Data->m_iface < 0) {
+    if (m_Data->usb.iface < 0) {
         fail("HID interface not found");
         close();
         return false;
     }
 
-    libusb_set_auto_detach_kernel_driver(m_Data->m_handle, 1); // = detach_kernel_driver
-    if (libusb_claim_interface(m_Data->m_handle, m_Data->m_iface) != 0) {
+    libusb_set_auto_detach_kernel_driver(m_Data->usb.handle, 1); // = detach_kernel_driver
+    if (libusb_claim_interface(m_Data->usb.handle, m_Data->usb.iface) != 0) {
         fail("Cannot claim interface (permissions? udev rule?)");
         close();
         return false;
@@ -99,7 +103,7 @@ bool Device::open() {
         emit lastErrorChanged();
     }
     m_Data->m_running = true;
-    if (m_Data->m_inEp)
+    if (m_Data->usb.inEp)
         m_Data->m_reader = std::thread(&Device::ReportHanlerLoop, this);
     emit connectedChanged();
     return true;
@@ -109,26 +113,26 @@ void Device::close() {
     m_Data->m_running = false;
     if (m_Data->m_reader.joinable())
         m_Data->m_reader.join();
-    if (m_Data->m_handle) {
-        libusb_release_interface(m_Data->m_handle, m_Data->m_iface);
-        libusb_close(m_Data->m_handle);
-        m_Data->m_handle = nullptr;
+    if (m_Data->usb.handle) {
+        libusb_release_interface(m_Data->usb.handle, m_Data->usb.iface);
+        libusb_close(m_Data->usb.handle);
+        m_Data->usb.handle = nullptr;
         emit connectedChanged();
     }
 }
 
 bool Device::sendReport(const QByteArray &data) {
-    if (!m_Data->m_handle) {
+    if (!m_Data->usb.handle) {
         fail("Not connected");
         return false;
     }
     int rc;
-    if (m_Data->m_outEp) {
+    if (m_Data->usb.outEp) {
         int n = 0;
-        rc = libusb_interrupt_transfer(m_Data->m_handle, m_Data->m_outEp, (uint8_t *)data.data(), data.size(), &n, 1000);
+        rc = libusb_interrupt_transfer(m_Data->usb.handle, m_Data->usb.outEp, (uint8_t *)data.data(), data.size(), &n, 1000);
     } else { // SET_REPORT, report type Output (0x02), report ID = data[0]
         rc = libusb_control_transfer(
-            m_Data->m_handle, 0x21, 0x09, 0x0200 | uint8_t(data[0]), m_Data->m_iface, (uint8_t *)data.data(), data.size(), 1000);
+            m_Data->usb.handle, 0x21, 0x09, 0x0200 | uint8_t(data[0]), m_Data->usb.iface, (uint8_t *)data.data(), data.size(), 1000);
     }
     if (rc < 0) {
         fail(QString("Write error: %1").arg(libusb_error_name(rc)));
@@ -138,7 +142,7 @@ bool Device::sendReport(const QByteArray &data) {
 }
 
 bool Device::setFrequency(double mhz) {
-    if (!m_Data->m_handle) {
+    if (!m_Data->usb.handle) {
         fail("Not connected");
         return false;
     }
@@ -160,7 +164,7 @@ bool Device::seek(int dir) {
 }
 
 bool Device::powerUp(){
-    if (!m_Data->m_handle) {
+    if (!m_Data->usb.handle) {
         fail("Not connected");
         return false;
     }
@@ -177,7 +181,7 @@ void Device::ReportHanlerLoop() {
     uint8_t buf[64];
     while (m_Data->m_running) {
         int n = 0;
-        int rc = libusb_interrupt_transfer(m_Data->m_handle, m_Data->m_inEp, buf, 7, &n, 200);
+        int rc = libusb_interrupt_transfer(m_Data->usb.handle, m_Data->usb.inEp, buf, 7, &n, 200);
         if (rc == 0 && n > 0) {
             QByteArray ba(reinterpret_cast<char *>(buf), n);
 
