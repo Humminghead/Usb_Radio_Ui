@@ -5,6 +5,8 @@
 #include <QtMath>
 #include <atomic>
 #include <chrono>
+#include <mutex>
+#include <queue>
 #include <thread>
 
 namespace Usb::Hid {
@@ -27,6 +29,8 @@ struct Device::DataImpl{
     QString m_error;
     bool m_hwIsPowered{false};
     uint8_t m_SeqId{0};
+    std::mutex m_ReportQueueMutex{};
+    std::queue<Usb::Hid::HostCommandReport> m_ReportQueue{};
 };
 
 Device::Device(int vid, int pid, QObject *parent) : QObject(parent)
@@ -150,11 +154,10 @@ bool Device::setFrequency(double mhz) {
     // Check that a given value stays in a given range
     mhz = qBound(87.5, qRound(mhz * 10) / 10.0, 108.0);
 
-    // Old format of the output report: ID 2, command 1, uint16 LE freq in 100 kHz units, 4 pad bytes
-    HostCommandReport report{.RawCommnad = CommandId::TuneFreq, .SeqId = ++m_Data->m_SeqId, .Value = quint16(qRound(mhz * 10))};
-
-    if (!sendReport(QByteArray(reinterpret_cast<char *>(&report), sizeof(HostCommandReport))))
-        return false;   
+    {
+        std::lock_guard g{m_Data->m_ReportQueueMutex};
+        m_Data->m_ReportQueue.emplace(HostCommandReport{.RawCommnad = CommandId::TuneFreq, .SeqId = m_Data->m_SeqId++, .Value = quint16(qRound(mhz * 10))});
+    }
 
     return true;
 }
@@ -169,10 +172,12 @@ bool Device::powerUp(){
         return false;
     }
 
-    HostCommandReport report{.RawCommnad = CommandId::PowerUp, .SeqId =++m_Data->m_SeqId, .Value = quint16(8750)};
+    static_assert(std::is_nothrow_move_constructible_v<HostCommandReport>);
 
-    if (!sendReport(QByteArray(reinterpret_cast<char *>(&report), sizeof(HostCommandReport))))
-        return false;
+    {
+        std::lock_guard g{m_Data->m_ReportQueueMutex};
+        m_Data->m_ReportQueue.emplace(HostCommandReport {.RawCommnad = CommandId::PowerUp, .SeqId = m_Data->m_SeqId++, .Value = quint16(875)});
+    }
 
     return true;
 }
@@ -180,22 +185,28 @@ bool Device::powerUp(){
 void Device::ReportHanlerLoop() {
     uint8_t buf[64];
     while (m_Data->m_running) {
-        int n = 0;
-        int rc = libusb_interrupt_transfer(m_Data->usb.handle, m_Data->usb.inEp, buf, 7, &n, 200);
-        if (rc == 0 && n > 0) {
+
+        // Out (to device)
+        if(!m_Data->m_ReportQueue.empty()){
+            std::lock_guard g{m_Data->m_ReportQueueMutex};
+            auto &report = m_Data->m_ReportQueue.front();
+            sendReport(QByteArray(reinterpret_cast<char *>(&report), sizeof(HostCommandReport)));
+            m_Data->m_ReportQueue.pop();
+        }
+
+        //In (from device)
+        if (int n = 0, rc = libusb_interrupt_transfer(m_Data->usb.handle, m_Data->usb.inEp, buf, 7, &n, 200);
+            rc == 0 && n > 0) {
             QByteArray ba(reinterpret_cast<char *>(buf), n);
 
-            if(auto id = ba.at(0); HOST_CMD_REPORT_ID == id){
-                ///\todo
-            }else if (DEVICE_TELEMETRY_REPORT_ID == id && n==sizeof(DeviceTelemetryReport)){
+            if (auto id = ba.at(0); DEVICE_TELEMETRY_REPORT_ID == id && n==sizeof(DeviceTelemetryReport)){
                 const DeviceTelemetryReport *const telemetry{reinterpret_cast<DeviceTelemetryReport *const>(ba.data())};
 
-                if ((telemetry->StatusByte & 0x80) == 0x80) {
-                    if (auto mhz = static_cast<double>(telemetry->Freq/10.0); !qFuzzyCompare(mhz, m_Data->m_frequencyCache)) {
+                if (auto mhz = static_cast<double>(telemetry->Freq/10.0); !qFuzzyCompare(mhz, m_Data->m_frequencyCache)) {
                         m_Data->m_frequencyCache = mhz;
                         emit frequencyChanged();
-                    }
                 }
+
             }
             else{
                 ///\todo do nothing. maybe print some error in UI
