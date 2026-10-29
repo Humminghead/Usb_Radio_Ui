@@ -13,7 +13,7 @@ SkinBase {
 
     Behavior on displayFrequency {
         enabled: !skin.dragging
-        NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: 50; easing.type: Easing.OutCubic }
     }
 
     onFrequencyChanged: {
@@ -123,11 +123,15 @@ SkinBase {
                 const f = Math.round((startF - (m.x - startX) / tuner.pxPerMHz) * 10) / 10
                 const c = Math.max(skin.minFreq, Math.min(skin.maxFreq, f))
                 skin.displayFrequency = c                      // immediate, Behavior disabled
-                if (Math.abs(c - skin.frequency) > 0.01)
-                    skin.tuneRequested(c)
             }
-            // dragging = false FIRST, then glide back to the confirmed value
-            onReleased: { skin.dragging = false; skin.displayFrequency = skin.frequency }
+            onReleased: {
+                skin.dragging = false;
+
+                if (Math.abs(skin.displayFrequency - skin.frequency) > 0.01)
+                {
+                    skin.tuneRequested(skin.displayFrequency)
+                }
+            }
             onCanceled: { skin.dragging = false; skin.displayFrequency = skin.frequency }
         }
     }
@@ -173,7 +177,8 @@ SkinBase {
                         onClicked: {
                             if (modelData.act === "skin") skin.nextSkinRequested()
                             else if (modelData.act === "connect") skin.connectRequested()
-                        } }
+                        }
+                    }
                 }
             }
         }
