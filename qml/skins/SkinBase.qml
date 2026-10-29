@@ -7,9 +7,10 @@ import QtQuick
 // `frequency`. The shell never reads or writes it.
 Item {
     // state (set by app)
-    property real   frequency: 99.2
+    property real   frequency: minFreq
     property bool   connected: false
-    property bool   playing: true
+    property bool   playing: false
+    property bool   uiActive: false
     property string skinName: ""
     property string status: ""
     property string stationName: "Station - " + frequency.toFixed(1) + " FM"
