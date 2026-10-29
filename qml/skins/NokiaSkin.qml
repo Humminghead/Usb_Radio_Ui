@@ -13,7 +13,7 @@ SkinBase {
 
     Behavior on displayFrequency {
         enabled: !skin.dragging
-        NumberAnimation { duration: 50; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
     }
 
     onFrequencyChanged: {
