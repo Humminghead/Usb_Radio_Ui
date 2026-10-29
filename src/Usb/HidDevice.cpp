@@ -9,7 +9,7 @@
 
 namespace Usb::Hid {
 
-struct Usb{
+struct DeviceConnection{
     libusb_context *context{nullptr};
     libusb_device_handle *handle{nullptr};
     int iface{-1};
@@ -20,7 +20,7 @@ struct Usb{
 };
 
 struct Device::DataImpl{
-    Usb usb{};
+    DeviceConnection usb{};
     std::atomic<bool> m_running{false};
     std::thread m_reader;
     double m_frequencyCache{0};
