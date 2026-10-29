@@ -24,6 +24,7 @@ enum class CommandId : uint8_t {
 struct HostCommandReport {
     uint8_t ReportId{HOST_CMD_REPORT_ID};
     CommandId RawCommnad{0};
+    uint8_t StatusByte{0};
     uint8_t SeqId{0};
     uint16_t Value{0};
     uint8_t Reserved[3]{0, 0, 0};
