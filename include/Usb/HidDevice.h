@@ -13,8 +13,7 @@ namespace Usb::Hid {
 class Device : public QObject {
     Q_OBJECT
     Q_PROPERTY(bool connected READ connected NOTIFY connectedChanged)
-    Q_PROPERTY(double frequency READ frequency NOTIFY frequencyChanged)
-    Q_PROPERTY(bool powered READ powered NOTIFY powerStateChanged)
+    Q_PROPERTY(double frequency READ frequency NOTIFY frequencyChanged)    
     Q_PROPERTY(QString lastError READ lastError NOTIFY lastErrorChanged)
   public:
     explicit Device(int vid, int pid, QObject *parent = nullptr);
@@ -35,13 +34,14 @@ class Device : public QObject {
     void connectedChanged();
     void frequencyChanged();
     void lastErrorChanged();
-    void reportReceived(const QByteArray &data); // raw 7-byte input report
-    void powerStateChanged();
+    void reportReceived(const QByteArray &data); // raw 7-byte input report    
 
   private:
-    bool sendReport(const QByteArray &data);
+    bool sendReport(const uint8_t* data, const std::size_t size);
     void ReportHanlerLoop();
-    void fail(const QString &msg);    
+    void fail(const QString &msg);
+
+    void failAsync(const QString &msg);
 
     class DataImpl;
     using DataImplPointer = std::unique_ptr<DataImpl, void(*)(DataImpl *)>;
