@@ -30,7 +30,7 @@ struct Device::DataImpl{
     bool m_hwIsPowered{false};
     uint8_t m_SeqId{0};
     std::mutex m_ReportQueueMutex{};
-    std::queue<Usb::Hid::HostCommandReport> m_ReportQueue{};
+    std::queue<Usb::Hid::HostCommandReport> m_ReportQueueOut{};
 };
 
 Device::Device(int vid, int pid, QObject *parent) : QObject(parent)
@@ -156,7 +156,7 @@ bool Device::setFrequency(double mhz) {
 
     {
         std::lock_guard g{m_Data->m_ReportQueueMutex};
-        m_Data->m_ReportQueue.emplace(HostCommandReport{.RawCommnad = CommandId::TuneFreq, .SeqId = m_Data->m_SeqId++, .Value = quint16(qRound(mhz * 10))});
+        m_Data->m_ReportQueueOut.emplace(HostCommandReport{.RawCommnad = CommandId::TuneFreq, .SeqId = m_Data->m_SeqId++, .Value = quint16(qRound(mhz * 10))});
     }
 
     return true;
@@ -176,7 +176,7 @@ bool Device::powerUp(){
 
     {
         std::lock_guard g{m_Data->m_ReportQueueMutex};
-        m_Data->m_ReportQueue.emplace(HostCommandReport {.RawCommnad = CommandId::PowerUp, .SeqId = m_Data->m_SeqId++, .Value = quint16(875)});
+        m_Data->m_ReportQueueOut.emplace(HostCommandReport {.RawCommnad = CommandId::PowerUp, .SeqId = m_Data->m_SeqId++, .Value = quint16(875)});
     }
 
     return true;
@@ -187,14 +187,13 @@ void Device::ReportHanlerLoop() {
     while (m_Data->m_running) {
 
         // Out (to device)
-        if(!m_Data->m_ReportQueue.empty()){
-            std::lock_guard g{m_Data->m_ReportQueueMutex};
-            auto &report = m_Data->m_ReportQueue.front();
+        if (std::lock_guard g{m_Data->m_ReportQueueMutex}; !m_Data->m_ReportQueueOut.empty()) {
+            auto &report = m_Data->m_ReportQueueOut.front();
             sendReport(QByteArray(reinterpret_cast<char *>(&report), sizeof(HostCommandReport)));
-            m_Data->m_ReportQueue.pop();
+            m_Data->m_ReportQueueOut.pop();
         }
 
-        //In (from device)
+        // In (from device)
         if (int n = 0, rc = libusb_interrupt_transfer(m_Data->usb.handle, m_Data->usb.inEp, buf, 7, &n, 200);
             rc == 0 && n > 0) {
             QByteArray ba(reinterpret_cast<char *>(buf), n);
@@ -202,11 +201,17 @@ void Device::ReportHanlerLoop() {
             if (auto id = ba.at(0); DEVICE_TELEMETRY_REPORT_ID == id && n==sizeof(DeviceTelemetryReport)){
                 const DeviceTelemetryReport *const telemetry{reinterpret_cast<DeviceTelemetryReport *const>(ba.data())};
 
+                // find(telemetry->SeqId)
+                // if order is clear
+                    //pop
+                //else
+                    //do the last command??
+                    //or resend the entire sequence from previous OK?
+
                 if (auto mhz = static_cast<double>(telemetry->Freq/10.0); !qFuzzyCompare(mhz, m_Data->m_frequencyCache)) {
                         m_Data->m_frequencyCache = mhz;
                         emit frequencyChanged();
                 }
-
             }
             else{
                 ///\todo do nothing. maybe print some error in UI
