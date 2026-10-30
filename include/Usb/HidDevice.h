@@ -1,9 +1,8 @@
 #pragma once
 #include <QByteArray>
 #include <QObject>
-#include <atomic>
 #include <libusb.h>
-#include <thread>
+#include <memory>
 
 namespace Usb::Hid {
 
@@ -14,17 +13,16 @@ namespace Usb::Hid {
 class Device : public QObject {
     Q_OBJECT
     Q_PROPERTY(bool connected READ connected NOTIFY connectedChanged)
-    Q_PROPERTY(double frequency READ frequency NOTIFY frequencyChanged)
-    Q_PROPERTY(bool powered READ powered NOTIFY powerStateChanged)
+    Q_PROPERTY(double frequency READ frequency NOTIFY frequencyChanged)    
     Q_PROPERTY(QString lastError READ lastError NOTIFY lastErrorChanged)
   public:
     explicit Device(int vid, int pid, QObject *parent = nullptr);
     ~Device() override;
 
-    bool connected() const { return m_handle != nullptr; }
-    double frequency() const { return m_frequencyCache; }
-    QString lastError() const { return m_error; }
-    bool powered() const { return m_hwIsPowered;}
+    bool connected() const;
+    double frequency() const;
+    QString lastError() const;
+    bool powered() const;
 
     Q_INVOKABLE bool open();
     Q_INVOKABLE void close();
@@ -36,25 +34,17 @@ class Device : public QObject {
     void connectedChanged();
     void frequencyChanged();
     void lastErrorChanged();
-    void reportReceived(const QByteArray &data); // raw 7-byte input report
-    void powerStateChanged();
+    void reportReceived(const QByteArray &data); // raw 7-byte input report    
 
   private:
-    bool sendReport(const QByteArray &data);
-    void readLoop();
+    bool sendReport(const uint8_t* data, const std::size_t size);
+    void ReportHanlerLoop();
     void fail(const QString &msg);
 
-    int m_Vid{-1};
-    int m_Pid{-1};
-    libusb_context *m_ctx = nullptr;
-    libusb_device_handle *m_handle = nullptr;
-    int m_iface = -1;
-    uint8_t m_outEp = 0, m_inEp = 0;
-    std::atomic<bool> m_running{false};
-    std::thread m_reader;
-    double m_frequencyCache{0};
-    QString m_error;
-    bool m_hwIsPowered{false};
-    uint8_t m_SeqId{0};
+    void failAsync(const QString &msg);
+
+    class DataImpl;
+    using DataImplPointer = std::unique_ptr<DataImpl, void(*)(DataImpl *)>;
+    DataImplPointer m_Data;
 };
 } // namespace Usb::Hid

@@ -23,19 +23,19 @@ enum class CommandId : uint8_t {
 #pragma pack(push, 1)
 struct HostCommandReport {
     uint8_t ReportId{HOST_CMD_REPORT_ID};
-    CommandId RawCommnad{0};
+    CommandId RawCommnad{0};    
     uint8_t SeqId{0};
     uint16_t Value{0};
-    uint8_t Reserved[3]{0, 0, 0};
+    uint8_t Reserved[4]{0, 0, 0, 0};
 };
 
 struct DeviceTelemetryReport {
     uint8_t ReportId{DEVICE_TELEMETRY_REPORT_ID};
-    uint8_t SeqId{0};
-    uint8_t StatusByte{0};
+    uint8_t SeqId{0};    
     uint16_t Freq{0};
     uint8_t Volume{0};
     uint8_t Mute{0};
+    uint8_t Reserved{0};
 };
 #pragma pack(pop)
 
