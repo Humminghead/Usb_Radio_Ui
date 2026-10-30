@@ -45,6 +45,6 @@ class Device : public QObject {
 
     class DataImpl;
     using DataImplPointer = std::unique_ptr<DataImpl, void(*)(DataImpl *)>;
-    DataImplPointer m_Data;
+    DataImplPointer m_data;
 };
 } // namespace Usb::Hid
