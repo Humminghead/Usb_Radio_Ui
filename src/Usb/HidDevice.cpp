@@ -86,7 +86,7 @@ Device::~Device() {
         libusb_exit(m_data->m_usb.context);
 }
 
-bool Device::connected() const { return m_data->m_usb.handle != nullptr; }
+bool Device::Connected() const { return m_data->m_usb.handle != nullptr; }
 
 double Device::frequency() const { return m_data->m_frequencyCurrent.load(); }
 

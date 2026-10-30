@@ -12,14 +12,14 @@ namespace Usb::Hid {
  */
 class Device : public QObject {
     Q_OBJECT
-    Q_PROPERTY(bool connected READ connected NOTIFY connectedChanged)
+    Q_PROPERTY(bool Connected READ Connected NOTIFY connectedChanged)
     Q_PROPERTY(double frequency READ frequency NOTIFY frequencyChanged)    
     Q_PROPERTY(QString lastError READ lastError NOTIFY lastErrorChanged)
   public:
     explicit Device(int vid, int pid, QObject *parent = nullptr);
     ~Device() override;
 
-    bool connected() const;
+    bool Connected() const;
     double frequency() const;
     QString lastError() const;
     bool powered() const;
