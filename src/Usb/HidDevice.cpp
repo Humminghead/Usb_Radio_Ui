@@ -92,27 +92,27 @@ double Device::frequency() const { return m_Data->m_frequencyCurrent.load(); }
 
 QString Device::lastError() const { return m_Data->m_error; }
 
-void Device::fail(const QString &msg) {
+void Device::Fail(const QString &msg) {
     if (m_Data->m_error == msg)
         return;
     m_Data->m_error = msg;
     emit lastErrorChanged();
 }
 
-void Device::failAsync(const QString &msg) {
-    QMetaObject::invokeMethod(this, [this, msg] { fail(msg); }, Qt::QueuedConnection);
+void Device::FailAsync(const QString &msg) {
+    QMetaObject::invokeMethod(this, [this, msg] { Fail(msg); }, Qt::QueuedConnection);
 }
 
 bool Device::open() {
     if (m_Data->usb.handle) {
-        fail("Device already open");
+        Fail("Device already open");
         return false;
     }
 
     m_Data->usb.handle = libusb_open_device_with_vid_pid(m_Data->usb.context, m_Data->usb.vid, m_Data->usb.pid);
 
     if (!m_Data->usb.handle) {
-        fail("Device not found");
+        Fail("Device not found");
         return false;
     }
 
@@ -137,14 +137,14 @@ bool Device::open() {
         libusb_free_config_descriptor(cfg);
     }
     if (m_Data->usb.iface < 0) {
-        fail("HID interface not found");
+        Fail("HID interface not found");
         close();
         return false;
     }
 
     libusb_set_auto_detach_kernel_driver(m_Data->usb.handle, 1); // = detach_kernel_driver
     if (libusb_claim_interface(m_Data->usb.handle, m_Data->usb.iface) != 0) {
-        fail("Cannot claim interface (permissions? udev rule?)");
+        Fail("Cannot claim interface (permissions? udev rule?)");
         close();
         return false;
     }
@@ -181,9 +181,9 @@ void Device::close() {
     }
 }
 
-bool Device::sendReport(const uint8_t* data, const std::size_t size) {
+bool Device::SendReport(const uint8_t* data, const std::size_t size) {
     if (!m_Data->usb.handle) {
-        failAsync("Not connected");
+        FailAsync("Not connected");
         return false;
     }
     int rc{-1};
@@ -195,7 +195,7 @@ bool Device::sendReport(const uint8_t* data, const std::size_t size) {
             m_Data->usb.handle, 0x21, 0x09, 0x0200 | uint8_t(data[0]), m_Data->usb.iface, const_cast<uint8_t*>(data), size, 1000);
     }
     if (rc < 0) {
-        failAsync(QString("Write error: %1").arg(libusb_error_name(rc)));
+        FailAsync(QString("Write error: %1").arg(libusb_error_name(rc)));
         return false;
     }
     return true;
@@ -203,7 +203,7 @@ bool Device::sendReport(const uint8_t* data, const std::size_t size) {
 
 bool Device::setFrequency(double mhz) {
     if (!m_Data->usb.handle) {
-        failAsync("Not connected");
+        FailAsync("Not connected");
         return false;
     }
 
@@ -225,7 +225,7 @@ bool Device::seek(int dir) {
 
 bool Device::powerUp(){
     if (!m_Data->usb.handle) {
-        failAsync("Not connected");
+        FailAsync("Not connected");
         return false;
     }    
 
@@ -246,7 +246,7 @@ void Device::ReportHanlerLoop() {
     while (m_Data->m_running) {
         // Out (to device)
         if (auto report = m_Data->reports.TryFront()) {
-            if (!sendReport(reinterpret_cast<const uint8_t *>(&*report), sizeof(HostCommandReport))) {
+            if (!SendReport(reinterpret_cast<const uint8_t *>(&*report), sizeof(HostCommandReport))) {
                 // retransmit next iteration; clear the stall so we can make progress
                 if (m_Data->usb.outEp)
                     libusb_clear_halt(m_Data->usb.handle, m_Data->usb.outEp);
@@ -256,7 +256,7 @@ void Device::ReportHanlerLoop() {
                     QMetaObject::invokeMethod(
                         this,
                         [this] {
-                            fail("Command timed out");
+                            Fail("Command timed out");
                             close();
                         },
                         Qt::QueuedConnection);
@@ -294,7 +294,7 @@ void Device::ReportHanlerLoop() {
             QMetaObject::invokeMethod(
                 this,
                 [this] {
-                    fail("Device unplugged");
+                    Fail("Device unplugged");
                     close();
                 },
                 Qt::QueuedConnection);

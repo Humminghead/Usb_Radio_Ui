@@ -37,11 +37,11 @@ class Device : public QObject {
     void reportReceived(const QByteArray &data); // raw 7-byte input report    
 
   private:
-    bool sendReport(const uint8_t* data, const std::size_t size);
+    bool SendReport(const uint8_t* data, const std::size_t size);
     void ReportHanlerLoop();
-    void fail(const QString &msg);
+    void Fail(const QString &msg);
 
-    void failAsync(const QString &msg);
+    void FailAsync(const QString &msg);
 
     class DataImpl;
     using DataImplPointer = std::unique_ptr<DataImpl, void(*)(DataImpl *)>;
