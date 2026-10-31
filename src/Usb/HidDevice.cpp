@@ -88,7 +88,7 @@ Device::~Device() {
 
 bool Device::Connected() const { return m_data->m_usb.handle != nullptr; }
 
-double Device::frequency() const { return m_data->m_frequencyCurrent.load(); }
+double Device::Frequency() const { return m_data->m_frequencyCurrent.load(); }
 
 QString Device::lastError() const { return m_data->m_error; }
 
