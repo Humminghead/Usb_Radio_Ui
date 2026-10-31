@@ -23,7 +23,7 @@ Window {
             interval: 500; running: false; repeat: true
             onTriggered: {
                 if(!hidOpen){
-                    hidOpen = hid.Open();
+                    hidOpen = hid.open();
                 }
 
                 timer.running = !hidOpen;
@@ -61,11 +61,11 @@ Window {
 
     Connections {
         target: loader.item
-        function onTuneRequested(mhz) { hid.SetFrequency(mhz) }
+        function onTuneRequested(mhz) { hid.setFrequency(mhz) }
         function onStepRequested(dir) { hid.seek(dir) }
         function onPlayToggled()      { root.playing = !root.playing }   // TODO: send mute/play command if your firmware has one
         function onPowerUpToggled()   { hid.powerUp() }
-        function onConnectRequested() { hid.Connected ? hid.Close() : hid.Open() }
+        function onConnectRequested() { hid.Connected ? hid.close() : hid.open() }
         function onNextSkinRequested() { root.skinIndex = (root.skinIndex + 1) % root.skins.length }
     }
 
@@ -86,7 +86,7 @@ Window {
     Connections {
         target: tray
         function onToggleRequested()        { root.toggleWindow() }
-        function onConnectToggleRequested() { hid.Connected ? hid.Close() : hid.Open() }
+        function onConnectToggleRequested() { hid.Connected ? hid.close() : hid.open() }
         function onQuitRequested()          { Qt.quit() }
     }
 
