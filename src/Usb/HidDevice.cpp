@@ -81,7 +81,7 @@ Device::Device(int vid, int pid, QObject *parent) : QObject(parent)
 }
 
 Device::~Device() {
-    close();
+    Close();
     if (m_data->m_usb.context)
         libusb_exit(m_data->m_usb.context);
 }
@@ -103,7 +103,7 @@ void Device::FailAsync(const QString &msg) {
     QMetaObject::invokeMethod(this, [this, msg] { Fail(msg); }, Qt::QueuedConnection);
 }
 
-bool Device::open() {
+bool Device::Open() {
     if (m_data->m_usb.handle) {
         Fail("Device already open");
         return false;
@@ -138,14 +138,14 @@ bool Device::open() {
     }
     if (m_data->m_usb.iface < 0) {
         Fail("HID interface not found");
-        close();
+        Close();
         return false;
     }
 
     libusb_set_auto_detach_kernel_driver(m_data->m_usb.handle, 1); // = detach_kernel_driver
     if (libusb_claim_interface(m_data->m_usb.handle, m_data->m_usb.iface) != 0) {
         Fail("Cannot claim interface (permissions? udev rule?)");
-        close();
+        Close();
         return false;
     }
 
@@ -164,7 +164,7 @@ bool Device::open() {
     return true;
 }
 
-void Device::close() {
+void Device::Close() {
     m_data->m_running = false;
     if (m_data->m_reader.joinable())
         m_data->m_reader.join();
@@ -201,7 +201,7 @@ bool Device::SendReport(const uint8_t* data, const std::size_t size) {
     return true;
 }
 
-bool Device::setFrequency(double mhz) {
+bool Device::SetFrequency(double mhz) {
     if (!m_data->m_usb.handle) {
         FailAsync("Not connected");
         return false;
@@ -220,7 +220,7 @@ bool Device::setFrequency(double mhz) {
 
 bool Device::seek(int dir) {    
     auto tFreq = m_data->m_frequencyRequested.load() + 0.1 * (dir > 0 ? 1 : -1);
-    return setFrequency(tFreq);
+    return SetFrequency(tFreq);
 }
 
 bool Device::powerUp(){
@@ -257,7 +257,7 @@ void Device::ReportHanlerLoop() {
                         this,
                         [this] {
                             Fail("Command timed out");
-                            close();
+                            Close();
                         },
                         Qt::QueuedConnection);
                     break; // leave the loop now, don't keep running with m_running == false
@@ -295,7 +295,7 @@ void Device::ReportHanlerLoop() {
                 this,
                 [this] {
                     Fail("Device unplugged");
-                    close();
+                    Close();
                 },
                 Qt::QueuedConnection);
         }

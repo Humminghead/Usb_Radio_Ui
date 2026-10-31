@@ -22,11 +22,10 @@ class Device : public QObject {
     bool Connected() const;
     double Frequency() const;
     QString LastError() const;
-    bool powered() const;
 
-    Q_INVOKABLE bool open();
-    Q_INVOKABLE void close();
-    Q_INVOKABLE bool setFrequency(double mhz); // 87.5 .. 108.0
+    Q_INVOKABLE bool Open();
+    Q_INVOKABLE void Close();
+    Q_INVOKABLE bool SetFrequency(double mhz); // 87.5 .. 108.0
     Q_INVOKABLE bool seek(int direction);      // +1 / -1 (0.1 MHz steps)
     Q_INVOKABLE bool powerUp();
 
