@@ -42,22 +42,22 @@ Window {
     // loaded skin starts at the confirmed frequency and never replays an animation.
     function loadSkin() {
         loader.setSource(Qt.resolvedUrl(skins[skinIndex].source), {
-            "frequency": hid.frequency,
-            "connected": hid.connected,
+            "frequency": hid.Frequency,
+            "connected": hid.Connected,
             "playing":   root.playing,
             "skinName":  skins[skinIndex].name,
-            "status":    hid.lastError,
+            "status":    hid.LastError,
             "uiActive":  root.uiActive
         })
     }
     onSkinIndexChanged: loadSkin()
 
     // Everything a skin gets/sends is defined by SkinBase.qml
-    Binding { target: loader.item; property: "frequency"; value: hid.frequency; when: loader.item }
-    Binding { target: loader.item; property: "connected";  value: hid.connected; when: loader.item }
+    Binding { target: loader.item; property: "frequency"; value: hid.Frequency; when: loader.item }
+    Binding { target: loader.item; property: "connected";  value: hid.Connected; when: loader.item }
     Binding { target: loader.item; property: "playing";    value: root.playing;  when: loader.item }
     Binding { target: loader.item; property: "skinName";   value: root.skins[root.skinIndex].name; when: loader.item }
-    Binding { target: loader.item; property: "status";     value: hid.lastError; when: loader.item }
+    Binding { target: loader.item; property: "status";     value: hid.LastError; when: loader.item }
 
     Connections {
         target: loader.item
@@ -65,7 +65,7 @@ Window {
         function onStepRequested(dir) { hid.seek(dir) }
         function onPlayToggled()      { root.playing = !root.playing }   // TODO: send mute/play command if your firmware has one
         function onPowerUpToggled()   { hid.powerUp() }
-        function onConnectRequested() { hid.connected ? hid.close() : hid.open() }
+        function onConnectRequested() { hid.Connected ? hid.close() : hid.open() }
         function onNextSkinRequested() { root.skinIndex = (root.skinIndex + 1) % root.skins.length }
     }
 
@@ -82,11 +82,11 @@ Window {
     onClosing: (close) => {
         if (tray.available) { close.accepted = false; root.hide() }
     }
-    Binding { target: tray; property: "connected"; value: hid.connected }
+    Binding { target: tray; property: "connected"; value: hid.Connected }
     Connections {
         target: tray
         function onToggleRequested()        { root.toggleWindow() }
-        function onConnectToggleRequested() { hid.connected ? hid.close() : hid.open() }
+        function onConnectToggleRequested() { hid.Connected ? hid.close() : hid.open() }
         function onQuitRequested()          { Qt.quit() }
     }
 

@@ -12,18 +12,19 @@ namespace Usb::Hid {
  */
 class Device : public QObject {
     Q_OBJECT
-    Q_PROPERTY(bool connected READ connected NOTIFY connectedChanged)
-    Q_PROPERTY(double frequency READ frequency NOTIFY frequencyChanged)    
-    Q_PROPERTY(QString lastError READ lastError NOTIFY lastErrorChanged)
+    Q_PROPERTY(bool Connected READ Connected NOTIFY connectedChanged)
+    Q_PROPERTY(double Frequency READ Frequency NOTIFY frequencyChanged)
+    Q_PROPERTY(QString LastError READ LastError NOTIFY lastErrorChanged)
   public:
     explicit Device(int vid, int pid, QObject *parent = nullptr);
     ~Device() override;
 
-    bool connected() const;
-    double frequency() const;
-    QString lastError() const;
-    bool powered() const;
+    bool Connected() const;
+    double Frequency() const;
+    QString LastError() const;
 
+    // By JavaScript and QML convention, any function or constructor name that begins with an uppercase letter is
+    // treated as a constructor function
     Q_INVOKABLE bool open();
     Q_INVOKABLE void close();
     Q_INVOKABLE bool setFrequency(double mhz); // 87.5 .. 108.0
@@ -34,17 +35,17 @@ class Device : public QObject {
     void connectedChanged();
     void frequencyChanged();
     void lastErrorChanged();
-    void reportReceived(const QByteArray &data); // raw 7-byte input report    
+    void reportReceived(const QByteArray &data); // raw 7-byte input report
 
   private:
-    bool sendReport(const uint8_t* data, const std::size_t size);
+    bool SendReport(const uint8_t* data, const std::size_t size);
     void ReportHanlerLoop();
-    void fail(const QString &msg);
+    void Fail(const QString &msg);
 
-    void failAsync(const QString &msg);
+    void FailAsync(const QString &msg);
 
     class DataImpl;
     using DataImplPointer = std::unique_ptr<DataImpl, void(*)(DataImpl *)>;
-    DataImplPointer m_Data;
+    DataImplPointer m_data;
 };
 } // namespace Usb::Hid
