@@ -167,7 +167,7 @@ SkinBase {
             Repeater {
                 model: [
                     { g: "☰", act: "connect" }, { g: "+", act: "" },
-                    { g: "🎧", act: "" },       { g: "≡", act: "skin" }
+                    { g: "🎧", act: "" },       { g: "≡", act: "menu" }
                 ]
                 delegate: Item {
                     width: skin.width / 4; height: 56
@@ -175,7 +175,7 @@ SkinBase {
                            color: modelData.act === "connect" && skin.connected ? skin.accent : "#ddd" }
                     MouseArea { anchors.fill: parent
                         onClicked: {
-                            if (modelData.act === "skin") skin.nextSkinRequested()
+                            if (modelData.act === "menu") skin.settingsRequested()
                             else if (modelData.act === "connect") skin.connectRequested()
                         }
                     }

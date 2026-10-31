@@ -24,10 +24,23 @@ qt_add_qml_module(
     src/Usb/HidDevice.cpp
     include/Usb/HidDevice.h
     include/Usb/Report.h
+    src/Settings/AppSettings.cpp
+    include/Settings/AppSettings.h
     src/Tray/TrayController.cpp
     include/Tray/TrayController.h
   QML_FILES
     qml/Main.qml
+    qml/SettingsPage.qml
+    qml/SettingsGroup.qml
+    qml/SettingRow.qml
+    qml/SettingSwitch.qml
+    qml/SettingChoice.qml
+    qml/SettingSlider.qml
+    qml/SettingInfo.qml
+    qml/SettingButton.qml
+    qml/GeneralPage.qml
+    qml/AudioPage.qml
+    qml/HardwarePage.qml
     qml/skins/SkinBase.qml
     qml/skins/RoadRadioSkin.qml
     qml/skins/NokiaSkin.qml

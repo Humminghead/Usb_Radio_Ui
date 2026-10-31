@@ -107,7 +107,7 @@ SkinBase {
         }
         Text { x: 36; anchors.verticalCenter: parent.verticalCenter
                text: "Radio"; color: "#f1f0f7"; font.pixelSize: 19 }
-        MouseArea { anchors.fill: parent; anchors.margins: -8; onClicked: skin.nextSkinRequested() }
+        MouseArea { anchors.fill: parent; anchors.margins: -8; onClicked: skin.settingsRequested() }
     }
 
     Rectangle {                                     // OFF / ON pill

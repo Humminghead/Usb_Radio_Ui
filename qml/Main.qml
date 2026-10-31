@@ -3,7 +3,7 @@ import QtQuick.Window
 
 Window {
     id: root
-    width: 360; height: 600; visible: true
+    width: 360; height: 600; visible: !startHidden
     title: "HID Radio"
     color: "#202020"
 
@@ -13,7 +13,9 @@ Window {
         { name: "Nokia",   source: "skins/NokiaSkin.qml" },
         { name: "Minimal", source: "skins/MinimalSkin.qml" }
     ]
-    property int skinIndex: 0
+    property int skinIndex: Math.max(0, Math.min(skins.length - 1, settings.value("general/skin", 0)))
+    property bool settingsOpen: false
+    readonly property bool startHidden: tray.available && settings.value("general/startInTray", false)
     property bool playing: true
     property bool hidOpen: false
     property bool uiActive: false
@@ -67,7 +69,7 @@ Window {
         function onPlayToggled()      { root.playing = !root.playing }   // TODO: send mute/play command if your firmware has one
         function onPowerUpToggled()   { hid.powerUp() }
         function onConnectRequested() { hid.Connected ? hid.close() : hid.open() }
-        function onNextSkinRequested() { root.skinIndex = (root.skinIndex + 1) % root.skins.length }
+        function onSettingsRequested() { root.settingsOpen = true }
     }
 
     // ---- tray: fold / unfold ----
@@ -81,7 +83,10 @@ Window {
     onVisibleChanged: tray.windowVisible = visible
     // close button folds into the tray (only when a tray exists)
     onClosing: (close) => {
-        if (tray.available) { close.accepted = false; root.hide() }
+        if (tray.available) {
+            if (settings.value("general/closeToTray", true)) { close.accepted = false; root.hide() }
+            else Qt.quit()
+        }
     }
     Binding { target: tray; property: "connected"; value: hid.Connected }
     Connections {
@@ -99,8 +104,34 @@ Window {
         }
     }
 
-    Component.onCompleted: {        
+    // ---- settings page (shared by all skins) ----
+    SettingsPage {
+        id: settingsPage
+        z: 100
+        width: root.width; height: root.height
+        x: root.settingsOpen ? 0 : root.width
+        visible: x < root.width
+        Behavior on x { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+        skins: root.skins
+        skinIndex: root.skinIndex
+        playing: root.playing
+        onCloseRequested: root.settingsOpen = false
+        onSkinSelected: (i) => { root.skinIndex = i; settings.setValue("general/skin", i) }
+        onMuteToggled: root.playing = !root.playing
+    }
+
+    // Reacts to every changed setting; add new keys here when they need to reach the device.
+    Connections {
+        target: settings
+        function onValueChanged(key) {
+            if (key === "")                    root.skinIndex = Math.max(0, Math.min(root.skins.length - 1, settings.value("general/skin", 0)))
+            else if (key === "audio/volume")   { /* TODO: hid.setVolume(settings.value(key, 80)) once Device has it */ }
+        }
+    }
+
+    Component.onCompleted: {
+        tray.windowVisible = root.visible
         loadSkin()
-        timer.running = true;
+        timer.running = settings.value("hardware/autoConnect", true)
     }
 }

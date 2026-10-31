@@ -63,7 +63,7 @@ SkinBase {
         Row {
             anchors.horizontalCenter: parent.horizontalCenter; spacing: 12
             Repeater {
-                model: ["−0.1", "Connect", "+0.1", "Skin"]
+                model: ["−0.1", "Connect", "+0.1", "Settings"]
                 delegate: Rectangle {
                     width: 72; height: 40; radius: 6; color: "#222"
                     Text { anchors.centerIn: parent; text: modelData; color: "white" }
@@ -73,7 +73,7 @@ SkinBase {
                             if (index === 0) skin.stepRequested(-1)
                             else if (index === 1) skin.connectRequested()
                             else if (index === 2) skin.stepRequested(1)
-                            else skin.nextSkinRequested()
+                            else skin.settingsRequested()
                         }
                     }
                 }

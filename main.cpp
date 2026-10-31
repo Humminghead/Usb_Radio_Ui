@@ -1,3 +1,4 @@
+#include "Settings/AppSettings.h"
 #include "Tray/TrayController.h"
 #include "Usb/HidDevice.h"
 #include <QApplication>
@@ -6,6 +7,9 @@
 
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
+    QCoreApplication::setOrganizationName("HidRadio");
+    QCoreApplication::setApplicationName("HidRadio");
+    AppSettings settings;
     Usb::Hid::Device hid(0xc0de,0xcafe);
     TrayController tray;    
 
@@ -15,6 +19,7 @@ int main(int argc, char *argv[]) {
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("hid", &hid);
     engine.rootContext()->setContextProperty("tray", &tray);
+    engine.rootContext()->setContextProperty("settings", &settings);
 
     QObject::connect(
         &engine,
