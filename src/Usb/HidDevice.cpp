@@ -90,7 +90,7 @@ bool Device::Connected() const { return m_data->m_usb.handle != nullptr; }
 
 double Device::Frequency() const { return m_data->m_frequencyCurrent.load(); }
 
-QString Device::lastError() const { return m_data->m_error; }
+QString Device::LastError() const { return m_data->m_error; }
 
 void Device::Fail(const QString &msg) {
     if (m_data->m_error == msg)

@@ -46,7 +46,7 @@ Window {
             "connected": hid.Connected,
             "playing":   root.playing,
             "skinName":  skins[skinIndex].name,
-            "status":    hid.lastError,
+            "status":    hid.LastError,
             "uiActive":  root.uiActive
         })
     }
@@ -57,7 +57,7 @@ Window {
     Binding { target: loader.item; property: "connected";  value: hid.Connected; when: loader.item }
     Binding { target: loader.item; property: "playing";    value: root.playing;  when: loader.item }
     Binding { target: loader.item; property: "skinName";   value: root.skins[root.skinIndex].name; when: loader.item }
-    Binding { target: loader.item; property: "status";     value: hid.lastError; when: loader.item }
+    Binding { target: loader.item; property: "status";     value: hid.LastError; when: loader.item }
 
     Connections {
         target: loader.item

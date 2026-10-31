@@ -14,14 +14,14 @@ class Device : public QObject {
     Q_OBJECT
     Q_PROPERTY(bool Connected READ Connected NOTIFY connectedChanged)
     Q_PROPERTY(double Frequency READ Frequency NOTIFY frequencyChanged)
-    Q_PROPERTY(QString lastError READ lastError NOTIFY lastErrorChanged)
+    Q_PROPERTY(QString LastError READ LastError NOTIFY lastErrorChanged)
   public:
     explicit Device(int vid, int pid, QObject *parent = nullptr);
     ~Device() override;
 
     bool Connected() const;
     double Frequency() const;
-    QString lastError() const;
+    QString LastError() const;
     bool powered() const;
 
     Q_INVOKABLE bool open();
