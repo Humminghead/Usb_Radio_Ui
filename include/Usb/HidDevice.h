@@ -21,8 +21,10 @@ class Device : public QObject {
 
     bool Connected() const;
     double Frequency() const;
-    QString LastError() const;    
+    QString LastError() const;
 
+    // By JavaScript and QML convention, any function or constructor name that begins with an uppercase letter is
+    // treated as a constructor function
     Q_INVOKABLE bool open();
     Q_INVOKABLE void close();
     Q_INVOKABLE bool setFrequency(double mhz); // 87.5 .. 108.0
@@ -33,7 +35,7 @@ class Device : public QObject {
     void connectedChanged();
     void frequencyChanged();
     void lastErrorChanged();
-    void reportReceived(const QByteArray &data); // raw 7-byte input report    
+    void reportReceived(const QByteArray &data); // raw 7-byte input report
 
   private:
     bool SendReport(const uint8_t* data, const std::size_t size);
