@@ -29,6 +29,7 @@ qt_add_qml_module(
   QML_FILES
     qml/Main.qml
     qml/skins/SkinBase.qml
+    qml/skins/RoadRadioSkin.qml
     qml/skins/NokiaSkin.qml
     qml/skins/MinimalSkin.qml
   RESOURCES

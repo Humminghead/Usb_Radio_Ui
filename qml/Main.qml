@@ -9,6 +9,7 @@ Window {
 
     // ---- Skin registry: add a new skin = add a file + one line here ----
     readonly property var skins: [
+        { name: "Road Radio", source: "skins/RoadRadioSkin.qml" },
         { name: "Nokia",   source: "skins/NokiaSkin.qml" },
         { name: "Minimal", source: "skins/MinimalSkin.qml" }
     ]
