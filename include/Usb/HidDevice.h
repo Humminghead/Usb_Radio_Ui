@@ -21,8 +21,7 @@ class Device : public QObject {
 
     bool Connected() const;
     double Frequency() const;
-    QString LastError() const;
-    bool powered() const;
+    QString LastError() const;    
 
     Q_INVOKABLE bool open();
     Q_INVOKABLE void close();
