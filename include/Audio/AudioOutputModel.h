@@ -1,8 +1,7 @@
 #pragma once
 #include <QAbstractListModel>
 #include <QAudioDevice>
-#include <QList>
-#include <QMediaDevices>
+#include <memory>
 
 class AppSettings;
 
@@ -23,9 +22,9 @@ public:
     QVariant data(const QModelIndex &index, int role) const override;
     QHash<int, QByteArray> roleNames() const override;
 
-    int currentIndex() const { return m_current; }
+    int currentIndex() const;
     void setCurrentIndex(int index);
-    int count() const { return m_outputs.size(); }
+    int count() const;
 
     // for the future audio pipeline
     QAudioDevice currentDevice() const;
@@ -39,8 +38,7 @@ private:
     void restoreSelection();
     static QString encodeId(const QAudioDevice &d);
 
-    AppSettings *m_settings;
-    QMediaDevices m_devices;
-    QList<QAudioDevice> m_outputs;
-    int m_current = -1;
+
+    class Impl;
+    std::unique_ptr<Impl, void(*)(Impl*)> m_impl;
 };
