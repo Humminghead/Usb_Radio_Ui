@@ -1,4 +1,4 @@
-#include "Audio/AudioOutputModel.h"
+#include "Audio/AudioModel.h"
 #include "Settings/AppSettings.h"
 #include "Tray/TrayController.h"
 #include "Usb/HidDevice.h"
@@ -11,7 +11,8 @@ int main(int argc, char *argv[]) {
     QCoreApplication::setOrganizationName("HidRadio");
     QCoreApplication::setApplicationName("HidRadio");
     AppSettings settings;
-    AudioOutputModel audioOutputs(&settings);
+    AudioModel audioOutputs(&settings, AudioDeviceRole::Output);
+    AudioModel audioInputs(&settings, AudioDeviceRole::Input);
     Usb::Hid::Device hid(0xc0de,0xcafe);
     TrayController tray;    
 
@@ -23,6 +24,7 @@ int main(int argc, char *argv[]) {
     engine.rootContext()->setContextProperty("tray", &tray);
     engine.rootContext()->setContextProperty("settings", &settings);
     engine.rootContext()->setContextProperty("audioOutputs", &audioOutputs);
+    engine.rootContext()->setContextProperty("audioInputs", &audioInputs);
 
     QObject::connect(
         &engine,

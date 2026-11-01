@@ -24,8 +24,8 @@ qt_add_qml_module(
     src/Usb/HidDevice.cpp
     include/Usb/HidDevice.h
     include/Usb/Report.h
-    src/Audio/AudioOutputModel.cpp
-    include/Audio/AudioOutputModel.h
+    src/Audio/AudioModel.cpp
+    include/Audio/AudioModel.h
     src/Settings/AppSettings.cpp
     include/Settings/AppSettings.h
     src/Tray/TrayController.cpp
