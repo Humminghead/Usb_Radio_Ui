@@ -11,7 +11,7 @@ SettingsGroup {
         title: "Connection"
         buttonText: hid.Connected ? "Disconnect" : "Connect"
         onClicked: hid.Connected ? hid.close() : hid.open()
-    }
+    }   
     SettingSwitch {
         title: "Auto-connect"
         description: "Keep trying to open the device on start (applies after restart)"

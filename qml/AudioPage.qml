@@ -3,6 +3,15 @@ import QtQuick
 SettingsGroup {
     id: page
 
+    SettingsComboBox {
+        title: "Audio output"
+        description: "Sound device used for playback"
+        model: audioOutputs                      // C++ QAbstractListModel
+        textRole: "name"
+        currentIndex: audioOutputs.currentIndex
+        onActivated: (i) => audioOutputs.currentIndex = i
+    }
+
     SettingSwitch {
         title: "Mute"
         description: "Silence output and pause the visualizer"

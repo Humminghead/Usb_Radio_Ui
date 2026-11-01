@@ -4,7 +4,7 @@ project(hid_radio LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_AUTOMOC ON)
 
-find_package(Qt6 6.5 REQUIRED COMPONENTS Quick Widgets)
+find_package(Qt6 6.5 REQUIRED COMPONENTS Quick Widgets Multimedia)
 find_package(PkgConfig REQUIRED)
 
 pkg_check_modules(LIBUSB REQUIRED IMPORTED_TARGET libusb-1.0)
@@ -24,6 +24,8 @@ qt_add_qml_module(
     src/Usb/HidDevice.cpp
     include/Usb/HidDevice.h
     include/Usb/Report.h
+    src/Audio/AudioOutputModel.cpp
+    include/Audio/AudioOutputModel.h
     src/Settings/AppSettings.cpp
     include/Settings/AppSettings.h
     src/Tray/TrayController.cpp
@@ -38,6 +40,7 @@ qt_add_qml_module(
     qml/SettingSlider.qml
     qml/SettingInfo.qml
     qml/SettingButton.qml
+    qml/SettingsComboBox.qml
     qml/GeneralPage.qml
     qml/AudioPage.qml
     qml/HardwarePage.qml
@@ -52,4 +55,4 @@ qt_add_qml_module(
     qml/skins/icons/arrow_btn_r.png
   )
 
-target_link_libraries(hid_radio PRIVATE Qt6::Quick Qt6::Widgets PkgConfig::LIBUSB)
+target_link_libraries(hid_radio PRIVATE Qt6::Quick Qt6::Widgets Qt6::Multimedia PkgConfig::LIBUSB)
