@@ -34,6 +34,7 @@ public:
 
     // for the future audio pipeline
     QAudioDevice currentDevice() const;
+    QAudioFormat preferredDeviceFormat() const;
 
 signals:
     void currentIndexChanged();

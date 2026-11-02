@@ -88,6 +88,10 @@ QAudioDevice AudioModel::currentDevice() const {
     return (m_impl->CurrentIndex() >= 0 && m_impl->CurrentIndex() < m_impl->GetDeviceList()->size()) ? m_impl->GetDeviceList()->at(m_impl->CurrentIndex()) : QAudioDevice();
 }
 
+QAudioFormat AudioModel::preferredDeviceFormat() const {
+    return currentDevice().preferredFormat()
+}
+
 void AudioModel::reload() {
     const int oldCount = m_impl->GetDeviceList()->size();
     beginResetModel();
@@ -113,3 +117,4 @@ void AudioModel::restoreSelection() {
     m_impl->SetCurrentIndex(idx);
     emit currentIndexChanged();   // always: lets bound ComboBoxes re-sync after a model reset
 }
+
