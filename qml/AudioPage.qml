@@ -21,6 +21,14 @@ SettingsGroup {
         onActivated: (i) => audioInputs.currentIndex = i
     }
 
+    SettingsComboBox {
+        title: "Default format"
+        description: "Sample rate and bit depth used for input"
+        model: []
+        currentIndex: 0
+        onActivated: (i) => audioInputFormat.currentIndex = i
+    }
+
     SettingSwitch {
         title: "Mute"
         description: "Silence output and pause the visualizer"

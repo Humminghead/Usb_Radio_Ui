@@ -26,6 +26,8 @@ qt_add_qml_module(
     include/Usb/Report.h
     src/Audio/AudioModel.cpp
     include/Audio/AudioModel.h
+    src/Audio/AudioDevice.cpp
+    include/Audio/AudioDevice.h
     src/Settings/AppSettings.cpp
     include/Settings/AppSettings.h
     src/Tray/TrayController.cpp
