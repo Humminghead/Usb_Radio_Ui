@@ -11,7 +11,6 @@ enum class AudioDeviceRole { Input, Output, Unset };
  * \param List of devices as QList<QAudioDevice>
  */
 static inline auto LoadDeviceList(const AudioDeviceRole role) -> QList<QAudioDevice>;
-static inline QString EncodeId(const QAudioDevice &d);
 
 /*!
  * \brief The AudioDeviceList class

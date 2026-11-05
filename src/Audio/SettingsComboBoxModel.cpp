@@ -1,5 +1,6 @@
 #include "Audio/SettingsComboBoxModel.h"
 #include "Audio/AudioDeviceList.h"
+#include "Audio/AudioFormatList.h"
 #include "Settings/AppSettings.h"
 
 #include <QAudioDevice>
@@ -70,6 +71,34 @@ SettingsComboBoxModel::SettingsComboBoxModel(std::shared_ptr<ComboBoxSettings> s
         });
 
         connect(storage, &AudioDeviceList::endReload, [this]() {
+            restoreSelection();
+            endResetModel();
+            emit countChanged();
+        });
+    }
+
+    // "Reset settings" clears the saved choice -> fall back to the system default
+    connect(m_impl->Settings(), &ComboBoxSettings::valueChanged, this, [this](const QString &key) {
+        if (key.isEmpty()) restoreSelection();
+    });
+    restoreSelection();
+}
+
+template <>
+SettingsComboBoxModel::SettingsComboBoxModel(std::shared_ptr<ComboBoxSettings> settings,
+                                             AudioFormatList&& list,
+                                             QObject *parent)
+    : QAbstractListModel(parent)
+    , m_impl(std::make_unique<Impl<std::remove_cv_t<std::remove_reference_t<decltype(list)>>>>(
+          settings, std::forward<AudioFormatList>(list)))
+{
+    // Setting up the connections after the move operation has been made
+    if (auto storage = static_cast<AudioFormatList *>(m_impl->DataRaw()); storage != nullptr) {
+        connect(storage, &AudioFormatList::beginReload, [this]() {
+            beginResetModel();
+        });
+
+        connect(storage, &AudioFormatList::endReload, [this]() {
             restoreSelection();
             endResetModel();
             emit countChanged();

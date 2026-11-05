@@ -1,4 +1,5 @@
 #include "Audio/AudioDeviceList.h"
+#include "Audio/AudioFormatList.h"
 #include "Audio/SettingsComboBoxModel.h"
 #include "Settings/AppSettings.h"
 #include "Tray/TrayController.h"
@@ -14,6 +15,7 @@ int main(int argc, char *argv[]) {
     auto settings = std::make_shared<ComboBoxSettings>();
     SettingsComboBoxModel audioOutputs(settings, AudioDeviceList{AudioDeviceRole::Output});
     SettingsComboBoxModel audioInputs(settings, AudioDeviceList{AudioDeviceRole::Input});
+    SettingsComboBoxModel audioInputFormats(settings, AudioFormatList{});
 
     Usb::Hid::Device hid(0xc0de, 0xcafe);
     TrayController tray;    
@@ -27,6 +29,7 @@ int main(int argc, char *argv[]) {
     engine.rootContext()->setContextProperty("settings", settings.get());
     engine.rootContext()->setContextProperty("audioOutputs", &audioOutputs);
     engine.rootContext()->setContextProperty("audioInputs", &audioInputs);
+    engine.rootContext()->setContextProperty("audioInputFormats", &audioInputFormats);
 
     QObject::connect(
         &engine,

@@ -1,14 +1,11 @@
 #include "Audio/AudioDeviceList.h"
-#include <QMediaDevices>
+#include "Audio/Tools.h"
 #include <QList>
+#include <QMediaDevices>
 #include <qdebug.h>
 
 auto LoadDeviceList(const AudioDeviceRole role) -> QList<QAudioDevice> {
     return (role == AudioDeviceRole::Input ? QMediaDevices::audioInputs() : QMediaDevices::audioOutputs());
-}
-
-QString EncodeId(const QAudioDevice &d) {
-    return QString::fromLatin1(d.id().toBase64());      // ids may be binary on some backends
 }
 
 auto connectDevicesByRole = [](const QMediaDevices *devices, const AudioDeviceRole &role, auto* object, auto slot) {

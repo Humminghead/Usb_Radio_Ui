@@ -24,10 +24,12 @@ qt_add_qml_module(
     src/Usb/HidDevice.cpp
     include/Usb/HidDevice.h
     include/Usb/Report.h
-    src/Audio/AudioModel.cpp
-    include/Audio/AudioModel.h
-    src/Audio/AudioDevice.cpp
-    include/Audio/AudioDevice.h
+    src/Audio/SettingsComboBoxModel.cpp
+    include/Audio/SettingsComboBoxModel.h
+    src/Audio/AudioDeviceList.cpp
+    include/Audio/AudioDeviceList.h
+    src/Audio/AudioFormatList.cpp
+    include/Audio/AudioFormatList.h
     src/Settings/AppSettings.cpp
     include/Settings/AppSettings.h
     src/Tray/TrayController.cpp

@@ -24,9 +24,10 @@ SettingsGroup {
     SettingsComboBox {
         title: "Default format"
         description: "Sample rate and bit depth used for input"
-        model: []
-        currentIndex: 0
-        onActivated: (i) => audioInputFormat.currentIndex = i
+        model: audioInputFormats
+        textRole: "name"
+        currentIndex: audioInputFormats.currentIndex
+        onActivated: (i) => audioInputFormats.currentIndex = i
     }
 
     SettingSwitch {
