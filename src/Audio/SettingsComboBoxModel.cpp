@@ -1,7 +1,8 @@
-#include "Audio/AudioModel.h"
-#include "Audio/AudioDevice.h"
+#include "Audio/SettingsComboBoxModel.h"
+#include "Audio/AudioDeviceList.h"
 #include "Settings/AppSettings.h"
 
+#include <QAudioDevice>
 #include <QList>
 #include <QMediaDevices>
 #include <type_traits>

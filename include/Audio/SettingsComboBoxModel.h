@@ -1,7 +1,9 @@
 #pragma once
 
 #include <QAbstractListModel>
-#include <QAudioDevice>
+#include <QHash>
+#include <QVariant>
+#include <memory>
 
 class ComboBoxSettings;
 

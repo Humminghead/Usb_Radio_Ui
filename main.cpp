@@ -1,8 +1,8 @@
-#include "Audio/AudioModel.h"
+#include "Audio/AudioDeviceList.h"
+#include "Audio/SettingsComboBoxModel.h"
 #include "Settings/AppSettings.h"
 #include "Tray/TrayController.h"
 #include "Usb/HidDevice.h"
-#include "Audio/AudioDevice.h"
 #include <QApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
