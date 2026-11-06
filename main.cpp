@@ -13,14 +13,33 @@ int main(int argc, char *argv[]) {
     QCoreApplication::setOrganizationName("HidRadio");
     QCoreApplication::setApplicationName("HidRadio");
     auto settings = std::make_shared<ComboBoxSettings>();
-    SettingsComboBoxModel audioOutputs(settings, AudioDeviceList{AudioDeviceRole::Output});
-    SettingsComboBoxModel audioInputs(settings, AudioDeviceList{AudioDeviceRole::Input});
-    SettingsComboBoxModel audioInputFormats(settings, AudioFormatList{});
+    auto audioOutList = std::make_shared<AudioDeviceList>(AudioDeviceRole::Output);
+    auto audioInList = std::make_shared<AudioDeviceList>(AudioDeviceRole::Input);
+    auto audioFormatList = std::make_shared<AudioFormatList>(audioInList);
 
+    SettingsComboBoxModel audioOutputs(settings, audioOutList);
+    SettingsComboBoxModel audioInputs(settings, audioInList);
+    SettingsComboBoxModel audioInputFormats(settings, audioFormatList);
+
+    // Re-sync the input devives and their parameters
+    auto ReloadInputComboBoxes = [&] {
+        if (const auto currentIdx = audioInputs.currentIndex(); currentIdx < audioInList->Size()) {
+            const auto id = audioInList->GetElementId(currentIdx);
+            audioFormatList->SetCurrentDeviceId(id);
+            audioInputFormats.Reset();
+        }
+    };
+
+    // Do the connections
+    QObject::connect(&audioInputs, &SettingsComboBoxModel::countChanged, [&]() { audioInputFormats.Reset(); });
+    QObject::connect(&audioInputs, &SettingsComboBoxModel::currentIndexChanged, [&] { ReloadInputComboBoxes(); });
+    QObject::connect(&audioInputs, &SettingsComboBoxModel::modelReset, [&](auto) { ReloadInputComboBoxes(); });
+
+    // Create HID
     Usb::Hid::Device hid(0xc0de, 0xcafe);
-    TrayController tray;    
+    TrayController tray;
 
-    // keep running when the window is folded into the tray
+    // Keep running when the window is folded into the tray
     app.setQuitOnLastWindowClosed(!tray.available());
 
     QQmlApplicationEngine engine;
@@ -39,5 +58,10 @@ int main(int argc, char *argv[]) {
         Qt::QueuedConnection);
 
     engine.loadFromModule("Radio", "Main");
+
+    // Reset all models after QML loading
+    audioOutputs.Reset();
+    audioInputs.Reset();
+
     return app.exec();
 }

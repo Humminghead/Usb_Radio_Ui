@@ -1,39 +1,54 @@
 #pragma once
 
 #include "Audio/Tools.h"
-#include <QObject>
+#include <QByteArray>
 #include <QList>
+#include <QMap>
+#include <QObject>
+#include <QSet>
+
+class AudioDeviceList;
+
+static QByteArray GetDeviceId(const QAudioDevice &device);
 
 class AudioFormatList : public QObject {
     Q_OBJECT
-  public:
-    AudioFormatList(){Reload();}
+
+    using DeviceId = QByteArray;
+    using FormatList = QList<QAudioFormat>;
+    using FormatMap = QMap<DeviceId, FormatList>;
+public:
+
+    explicit AudioFormatList(const std::shared_ptr<AudioDeviceList> &list, QObject *object = nullptr);
     ~AudioFormatList() = default;
 
-    AudioFormatList(AudioFormatList &&l) {Reload();}
+    AudioFormatList(AudioFormatList &&l) = delete;
     AudioFormatList *operator=(AudioFormatList &&l) = delete;
 
-    AudioFormatList(AudioFormatList &l) =delete;
+    AudioFormatList(AudioFormatList &l) = delete;
     AudioFormatList *operator=(AudioFormatList &l) = delete;
 
-    size_t Size() const { return test.size(); }
+    size_t Size() const;
 
-    auto GetElementId(size_t i) const -> QString { return {i == 0 ? "12345" : "7890"}; }
+    auto GetElementId(size_t i) const -> QString;
 
-    auto GetElementDescription(size_t i) const -> QString { return {test.at(i)}; }
+    auto GetElementDescription(size_t i) const -> QString;
 
-    auto IsDefaultElement(size_t i) const -> bool { return {}; }
+    auto IsDefaultElement(size_t i) const -> bool;
 
-    auto IsEmpty() const noexcept -> bool { return {}; }
-signals:
+    auto IsEmpty() const noexcept -> bool;
+
+    void Reload();
+
+    void SetCurrentDeviceId(const QString &id);
+  signals:
     void beginReload();
     void endReload();
 
-private:
-    void Reload(){
-        emit beginReload();
+  private:
+    FormatMap ListSupportedFormats(const QAudioDevice &device);
 
-        emit endReload();
-    }
-    QList<QString> test{"First","Second"};
+    QByteArray m_currentDeviceId{};
+    FormatMap m_formats;
+    std::shared_ptr<AudioDeviceList> m_devices;
 };

@@ -20,8 +20,13 @@ class SettingsComboBoxModel : public QAbstractListModel {
 public:
     enum Roles { NameRole = Qt::UserRole + 1, IdRole, IsDefaultRole };
 
-    template <class DataSource>
-    explicit SettingsComboBoxModel(std::shared_ptr<ComboBoxSettings> settings, DataSource&&, QObject *parent = nullptr);
+    template <class DataSourcePtr>
+    explicit SettingsComboBoxModel(std::shared_ptr<ComboBoxSettings> settings, std::shared_ptr<DataSourcePtr>, QObject *parent = nullptr);
+
+    template <typename T>
+    SettingsComboBoxModel(std::shared_ptr<ComboBoxSettings> settings, T &&, QObject *parent = nullptr) {
+        static_assert(false, "Type doesn't supported");
+    }
 
     ~SettingsComboBoxModel() override;
 
@@ -36,6 +41,8 @@ public:
     // for the future audio pipeline
     // QAudioDevice currentDevice() const;
     // QAudioFormat preferredDeviceFormat() const;
+
+    void Reset();
 
 signals:
     void currentIndexChanged();

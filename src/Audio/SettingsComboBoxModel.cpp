@@ -26,6 +26,7 @@ public:
     virtual bool IsDefaultElement(size_t i) const = 0;
     virtual bool IsEmpty() const noexcept = 0;
     virtual void* DataRaw() noexcept = 0;
+    virtual void Reload() = 0;
 };
 
 template <class T> struct SettingsComboBoxModel::Impl : public SettingsComboBoxModel::ImplBase {
@@ -43,73 +44,66 @@ template <class T> struct SettingsComboBoxModel::Impl : public SettingsComboBoxM
 
     auto SetCurrentIndex(int idx) -> void override { m_current = idx; }
 
-    auto ElementCount() const -> size_t override { return m_data.Size(); }
+    auto ElementCount() const -> size_t override { return m_data->Size(); }
 
-    auto ElementId(size_t i) const -> QString override { return m_data.GetElementId(i); }
+    auto ElementId(size_t i) const -> QString override { return m_data->GetElementId(i); }
 
-    auto ElementDescription(size_t i) const -> QString override { return m_data.GetElementDescription(i); }
+    auto ElementDescription(size_t i) const -> QString override { return m_data->GetElementDescription(i); }
 
-    auto IsDefaultElement(size_t i) const -> bool override { return m_data.IsDefaultElement(i); }
+    auto IsDefaultElement(size_t i) const -> bool override { return m_data->IsDefaultElement(i); }
 
-    auto IsEmpty() const noexcept -> bool override { return m_data.IsEmpty(); }
+    auto IsEmpty() const noexcept -> bool override { return m_data->IsEmpty(); }
 
-    void* DataRaw() noexcept override { return reinterpret_cast<void*>(&m_data); }
+    void* DataRaw() noexcept override { return reinterpret_cast<void*>(m_data.get()); }
+
+    void Reload() override { m_data->Reload(); }
 };
 
 template <>
-SettingsComboBoxModel::SettingsComboBoxModel(std::shared_ptr<ComboBoxSettings> settings,
-                                             AudioDeviceList&& list,
-                                             QObject *parent)
-    : QAbstractListModel(parent)
-    , m_impl(std::make_unique<Impl<std::remove_cv_t<std::remove_reference_t<decltype(list)>>>>(
-          settings, std::forward<AudioDeviceList>(list)))
-{
+SettingsComboBoxModel::SettingsComboBoxModel(
+    std::shared_ptr<ComboBoxSettings> settings,
+    std::shared_ptr<AudioDeviceList> p_lst,
+    QObject *parent)
+    : QAbstractListModel(parent),
+      m_impl(std::make_unique<Impl<std::remove_cv_t<std::remove_reference_t<decltype(p_lst)>>>>(settings, p_lst)) {
     // Setting up the connections after the move operation has been made
-    if (auto storage = static_cast<AudioDeviceList *>(m_impl->DataRaw()); storage != nullptr) {
-        connect(storage, &AudioDeviceList::beginReload, [this]() {
-            beginResetModel();
-        });
-
+    if (auto storage = static_cast<AudioDeviceList *>(m_impl->DataRaw()); storage != nullptr) {        
         connect(storage, &AudioDeviceList::endReload, [this]() {
-            restoreSelection();
-            endResetModel();
+            restoreSelection();            
             emit countChanged();
         });
     }
 
     // "Reset settings" clears the saved choice -> fall back to the system default
     connect(m_impl->Settings(), &ComboBoxSettings::valueChanged, this, [this](const QString &key) {
-        if (key.isEmpty()) restoreSelection();
+        if (key.isEmpty())
+            restoreSelection();
     });
-    restoreSelection();
+    Reset();
 }
 
 template <>
-SettingsComboBoxModel::SettingsComboBoxModel(std::shared_ptr<ComboBoxSettings> settings,
-                                             AudioFormatList&& list,
-                                             QObject *parent)
-    : QAbstractListModel(parent)
-    , m_impl(std::make_unique<Impl<std::remove_cv_t<std::remove_reference_t<decltype(list)>>>>(
-          settings, std::forward<AudioFormatList>(list)))
-{
-    // Setting up the connections after the move operation has been made
-    if (auto storage = static_cast<AudioFormatList *>(m_impl->DataRaw()); storage != nullptr) {
-        connect(storage, &AudioFormatList::beginReload, [this]() {
-            beginResetModel();
-        });
+SettingsComboBoxModel::SettingsComboBoxModel(
+    std::shared_ptr<ComboBoxSettings> settings,
+    std::shared_ptr<AudioFormatList> p_lst,
+    QObject *parent)
+    : QAbstractListModel(parent),
+    m_impl(std::make_unique<Impl<std::remove_cv_t<std::remove_reference_t<decltype(p_lst)>>>>(settings, p_lst)) {
 
+    if (auto storage = static_cast<AudioFormatList *>(m_impl->DataRaw()); storage != nullptr) {        
         connect(storage, &AudioFormatList::endReload, [this]() {
-            restoreSelection();
-            endResetModel();
+            restoreSelection();            
             emit countChanged();
         });
     }
 
     // "Reset settings" clears the saved choice -> fall back to the system default
     connect(m_impl->Settings(), &ComboBoxSettings::valueChanged, this, [this](const QString &key) {
-        if (key.isEmpty()) restoreSelection();
+        if (key.isEmpty())
+            restoreSelection();        
     });
-    restoreSelection();
+
+    Reset();
 }
 
 SettingsComboBoxModel::~SettingsComboBoxModel() = default;
@@ -142,10 +136,20 @@ int SettingsComboBoxModel::currentIndex() const { return m_impl->GetCurrentIndex
 
 void SettingsComboBoxModel::setCurrentIndex(int index)
 {
-    m_impl->SetCurrentIndex(index);
+    if(auto currentIdx = m_impl->GetCurrentIndex(); index==currentIdx)
+        return;
+
+    m_impl->SetCurrentIndex(index);    
+    emit currentIndexChanged();
 }
 
 int SettingsComboBoxModel::count() const { return m_impl->ElementCount(); }
+
+void SettingsComboBoxModel::Reset() {
+    beginResetModel();
+    m_impl->Reload();
+    endResetModel();
+}
 
 /*
 QAudioDevice SettingsComboBoxModel<AudioDevice>currentDevice() const {
@@ -180,5 +184,6 @@ void SettingsComboBoxModel::restoreSelection() {
         idx = 0;
 
     m_impl->SetCurrentIndex(idx);
-    emit currentIndexChanged(); // always: lets bound ComboBoxes re-sync after a model reset
+    // emit currentIndexChanged(); // always: lets bound ComboBoxes re-sync after a model reset
 }
+

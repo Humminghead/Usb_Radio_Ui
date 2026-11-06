@@ -18,11 +18,11 @@ static inline auto LoadDeviceList(const AudioDeviceRole role) -> QList<QAudioDev
 class AudioDeviceList : public QObject {
     Q_OBJECT
 
-  public:
+  public:    
     explicit AudioDeviceList(const AudioDeviceRole &role, QObject *parent = nullptr);
     ~AudioDeviceList() = default;
 
-    AudioDeviceList(AudioDeviceList &&l);
+    AudioDeviceList(AudioDeviceList &&l) = delete;
     AudioDeviceList *operator=(AudioDeviceList &&l) = delete;
 
     AudioDeviceList(AudioDeviceList &) = delete;
@@ -39,13 +39,14 @@ class AudioDeviceList : public QObject {
 
     auto IsEmpty() const noexcept -> bool;
 
+    void Reload();
+
   signals:
     void beginReload();
     void endReload();
 
   private:
-    void Setup();
-    void Reload();
+    void Setup();    
 
     class Impl;
     std::unique_ptr<Impl, void (*)(Impl *)> m_impl;
