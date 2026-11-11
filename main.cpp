@@ -50,7 +50,11 @@ int main(int argc, char *argv[]) {
 
     // Do the connections
     // In
-    QObject::connect(&audioInputs, &SettingsComboBoxModel::countChanged, [&]() { audioInputFormats.Reset(); });
+    QObject::connect(&audioInputs, &SettingsComboBoxModel::countChanged, [&]() {
+        audioSessionIn.setAudioInput(nullptr);
+        audioInputFormats.Reset();
+        audioSessionIn.setAudioInput(&audioIn);
+    });
     QObject::connect(&audioInputs, &SettingsComboBoxModel::currentIndexChanged, [&] {
         ReloadInputComboBoxes();
         UpdateDevice(audioIn, audioInputs, audioInList);
@@ -61,6 +65,10 @@ int main(int argc, char *argv[]) {
         // qDebug()<<"AUDIO INPUT FORMAT CHANGED";
     });
     // Out
+    QObject::connect(&audioOutputs, &SettingsComboBoxModel::countChanged, [&]() {
+        audioSessionIn.setAudioOutput(nullptr);
+        audioSessionIn.setAudioOutput(&audioOut);
+    });
     QObject::connect(&audioOutputs, &SettingsComboBoxModel::currentIndexChanged, [&]{
         UpdateDevice(audioOut,audioOutputs,audioOutList);
     });
