@@ -35,6 +35,11 @@ int main(int argc, char *argv[]) {
     QObject::connect(&audioInputs, &SettingsComboBoxModel::currentIndexChanged, [&] { ReloadInputComboBoxes(); });
     QObject::connect(&audioInputs, &SettingsComboBoxModel::modelReset, [&](auto) { ReloadInputComboBoxes(); });
 
+    QObject::connect(&audioInputFormats, &SettingsComboBoxModel::currentIndexChanged,[](){
+        ///\todo
+        // qDebug()<<"AUDIO INPUT FORMAT CHANGED";
+    });
+
     // Create HID
     Usb::Hid::Device hid(0xc0de, 0xcafe);
     TrayController tray;

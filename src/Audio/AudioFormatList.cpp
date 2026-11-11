@@ -6,19 +6,17 @@
 #include <QAudioFormat>
 #include <QDebug>
 #include <QSet>
-// #include <iterator>
 
 auto AudioFormatList::ListSupportedFormats(const QAudioDevice &device) -> AudioFormatList::FormatMap {
     QAudioFormat prefFormat = device.preferredFormat();
     AudioFormatList::FormatList list{prefFormat};
+    ///\todo
     return AudioFormatList::FormatMap{{device.id().toBase64(), list}};
 }
 
 AudioFormatList::AudioFormatList(const std::shared_ptr<AudioDeviceList> &list, QObject *object) : m_devices{list} {
     Reload();
 }
-
-// AudioFormatList::AudioFormatList(AudioFormatList &&l) {Reload(l);}
 
 size_t AudioFormatList::Size() const {
     if (auto currentFormats = m_formats.find(m_currentDeviceId); m_formats.end() == currentFormats)
@@ -75,4 +73,7 @@ void AudioFormatList::SetCurrentDeviceId(const QString &id) {
     }
 }
 
-QByteArray GetDeviceId(const QAudioDevice &device) {}
+QByteArray GetDeviceId(const QAudioDevice &device) {
+    ///\todo
+    return {};
+}
