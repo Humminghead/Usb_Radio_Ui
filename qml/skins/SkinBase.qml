@@ -22,7 +22,7 @@ Item {
     signal playToggled()
     signal powerUpToggled()
     signal connectRequested()
-    signal nextSkinRequested()
+    signal settingsRequested()
 
     readonly property real minFreq: 87.5
     readonly property real maxFreq: 108.0
