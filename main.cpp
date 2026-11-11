@@ -7,6 +7,17 @@
 #include <QApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QMediaCaptureSession>
+#include <QAudioInput>
+#include <QAudioOutput>
+
+auto UpdateDevice =
+    []<typename AudioCh>(AudioCh &ch, const SettingsComboBoxModel &model, std::shared_ptr<AudioDeviceList> list) {
+        if (auto idx = model.currentIndex(); idx >= 0) {
+            auto &dev = list->At(idx);
+            ch.setDevice(dev);
+        }
+    };
 
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
@@ -21,6 +32,13 @@ int main(int argc, char *argv[]) {
     SettingsComboBoxModel audioInputs(settings, audioInList);
     SettingsComboBoxModel audioInputFormats(settings, audioFormatList);
 
+    // Audio capture
+    QMediaCaptureSession audioSessionIn;
+    QAudioInput audioIn;
+    QAudioOutput audioOut;
+    audioSessionIn.setAudioInput(&audioIn);
+    audioSessionIn.setAudioOutput(&audioOut);
+
     // Re-sync the input devives and their parameters
     auto ReloadInputComboBoxes = [&] {
         if (const auto currentIdx = audioInputs.currentIndex(); currentIdx < audioInList->Size()) {
@@ -31,13 +49,20 @@ int main(int argc, char *argv[]) {
     };
 
     // Do the connections
+    // In
     QObject::connect(&audioInputs, &SettingsComboBoxModel::countChanged, [&]() { audioInputFormats.Reset(); });
-    QObject::connect(&audioInputs, &SettingsComboBoxModel::currentIndexChanged, [&] { ReloadInputComboBoxes(); });
+    QObject::connect(&audioInputs, &SettingsComboBoxModel::currentIndexChanged, [&] {
+        ReloadInputComboBoxes();
+        UpdateDevice(audioIn, audioInputs, audioInList);
+    });
     QObject::connect(&audioInputs, &SettingsComboBoxModel::modelReset, [&](auto) { ReloadInputComboBoxes(); });
-
     QObject::connect(&audioInputFormats, &SettingsComboBoxModel::currentIndexChanged,[](){
         ///\todo
         // qDebug()<<"AUDIO INPUT FORMAT CHANGED";
+    });
+    // Out
+    QObject::connect(&audioOutputs, &SettingsComboBoxModel::currentIndexChanged, [&]{
+        UpdateDevice(audioOut,audioOutputs,audioOutList);
     });
 
     // Create HID
